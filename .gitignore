@@ -1,2 +1,6 @@
-/*_down.xlsx
-/*_up.xlsx
+*_down.xlsx
+*_up.xlsx
+.RData
+.Rhistory
+gene-downregulated_new
+gene-downregulated

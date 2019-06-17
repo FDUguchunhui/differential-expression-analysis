@@ -193,7 +193,7 @@ length(res[(res$log2FoldChange < -1)  & res_sig_pos ,]$baseMean)
 
 # get the name of downregulated genes
 # following demo for 1h
-write(file ='gene-downregulated_new',x = row.names(res_list_down[[1]]))
+write(file ='gene-downregulated_new.txt',x = row.names(res_list_down[[1]]))
 
 #search for a gene whether in down or up regulation
 which(row.names(res_list_up[[1]]) == 'ENSG00000102794')
