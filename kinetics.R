@@ -4,6 +4,7 @@ library(BiocManager)
 # if you have install DESeq2, uncomment the followiing line
 # BiocManager::install("DESeq2")
 library(DESeq2)
+library(tidyverse)
 
 # run next line if you need to get some help from DESeq2
 # browseVignettes("DESeq2")
@@ -155,7 +156,7 @@ res_subgroup <- function(res, alpha=0.1, reg_LFC=1, reg_dir='all'){
                 res_LFC_pos <- (res$log2FoldChange < -reg_LFC)
             }
   
-  return(res[res_LFC_pos,])
+  return(res[res_LFC_pos & res_sig_pos,])
   
 }
 
@@ -205,3 +206,29 @@ which(row.names(res) == 'ENSG00000102794')
 #plot counts of reads for single gene across groups
 plotCounts(dds, gene=which.min(res$padj), intgroup="condition")
 
+#transform the data into tibble
+#do intersection over all time points with up-regulation
+tibble.1h_up <- as_tibble(as.data.frame(res_list_up[[1]]), rownames = 'genes')
+tibble.2h_up <- as_tibble(as.data.frame(res_list_up[[2]]), rownames = 'genes')
+tibble.4h_up <- as_tibble(as.data.frame(res_list_up[[3]]), rownames = 'genes')
+tibble.6h_up <- as_tibble(as.data.frame(res_list_up[[4]]), rownames = 'genes')
+genes_up_intersection <- dplyr::intersect(tibble.1h_up$genes, tibble.2h_up$genes) %>% 
+  dplyr::intersect(tibble.4h_up$genes) %>% 
+  dplyr::intersect(tibble.6h_up$genes)
+length(genes_up_intersection)
+
+genes_up_intersection.table <- table_nodup[table_nodup$Geneid %in% genes_up_intersection,]
+write.xlsx2(genes_intersection.table, 'genes_up_all_time_points_intersection.xlsx')
+
+#do intersection over all time points with down-regulation
+tibble.1h_down <- as_tibble(as.data.frame(res_list_down[[1]]), rownames = 'genes')
+tibble.2h_down <- as_tibble(as.data.frame(res_list_down[[2]]), rownames = 'genes')
+tibble.4h_down <- as_tibble(as.data.frame(res_list_down[[3]]), rownames = 'genes')
+tibble.6h_down <- as_tibble(as.data.frame(res_list_down[[4]]), rownames = 'genes')
+genes_down_intersection <- dplyr::intersect(tibble.1h_down$genes, tibble.2h_down$genes) %>% 
+  dplyr::intersect(tibble.4h_down$genes) %>% 
+  dplyr::intersect(tibble.6h_down$genes)
+length(genes_down.intersection)
+
+genes_down_intersection.table <- table_nodup[table_nodup$Geneid %in% genes_down_intersection,]
+write.xlsx2(genes_down_intersection.table, 'genes_down_all_time_points_intersection.xlsx')
