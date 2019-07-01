@@ -5,7 +5,8 @@ library(BiocManager)
 # BiocManager::install("DESeq2")
 library(DESeq2)
 library(tidyverse)
-
+library(biomaRt)
+library(dplyr)
 # run next line if you need to get some help from DESeq2
 # browseVignettes("DESeq2")
 
@@ -17,14 +18,44 @@ options(java.parameters = "-Xmx2048m")
 # read in the dataset
 table <- read.csv('kinetics_All_HD.csv', stringsAsFactors = F)
 
+#
+listMarts()
+ensembl=useMart("ensembl")
+listDatasets(ensembl)
 
+mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
+listFilters(mart)
+
+# G_list_1 <- getBM(filters= "hgnc_symbol", 
+#                 attributes= c("ensembl_gene_id", 'hgnc_symbol')
+#                 ,values=genes,mart= mart)
+
+G_list <- getBM(filters= "ensembl_gene_id", 
+                  attributes= c("ensembl_gene_id", 'external_gene_name'),
+                  values=table$Geneid1,
+                  mart= mart)
+
+write.xlsx2(G_list_2, 'gene_id_to_name.xlsx')
 #the original dataset has two gene id, 
 #and the second one has duplicates, in order to use the second one, need to deal with it
 #!
-table_geneid <- table[,-1]
+
+
+#merge the origin with gene_name from biomart, and arrange it with original datastructure
+table_merge <- sqldf::sqldf('select *
+             from "table"
+             left join G_list_2 on "table".Geneid1 = G_list_2.ensembl_gene_id') 
+table_reordered <- table_merge %>%
+  as_tibble() %>% 
+  select(Geneid1, external_gene_name, everything())
+table_reordered <- table_reordered[, c(-3, -19)]
+table_reordered$external_gene_name <- 
+  ifelse(is.na(table_reordered$external_gene_name),table_reordered$Geneid1 ,table_reordered$external_gene_name)
+
+table_geneid <- table_reordered[,-1]
+colnames(table_geneid)[1] = 'Geneid'
 # omit any row if has missing value 
 # Caution! this may not the best method
-table_geneid <- na.omit(table_geneid)
 head(table_geneid)
 
 
@@ -32,17 +63,18 @@ head(table_geneid)
 # base rule: average the read from the same gene
 # caution! This may not applicable for bio-duplicate
 table_nodup <-  sqldf::sqldf('
-  select geneid,
+  select Geneid,
          avg(HD1_Blood) as HD1_Blood, avg(HD2_Blood) as HD2_Blood, avg(HD6_Blood) as HD6_Blood,
-         avg(HD1_1H) as HD_1H, avg(HD2_1H) as HD2_1H, avg(HD6_1H) as HD6_1H,
-         avg(HD1_2H) as HD_2H, avg(HD2_2H) as HD2_2H, avg(HD6_2H) as HD6_2H,
-         avg(HD1_4H) as HD_4H, avg(HD2_4H) as HD2_4H, avg(HD6_4H) as HD6_4H,
-         avg(HD1_6H) as HD_6H, avg(HD2_6H) as HD2_6H, avg(HD6_6H) as HD6_6H
+         avg(HD1_1H) as HD1_1H, avg(HD2_1H) as HD2_1H, avg(HD6_1H) as HD6_1H,
+         avg(HD1_2H) as HD1_2H, avg(HD2_2H) as HD2_2H, avg(HD6_2H) as HD6_2H,
+         avg(HD1_4H) as HD1_4H, avg(HD2_4H) as HD2_4H, avg(HD6_4H) as HD6_4H,
+         avg(HD1_6H) as HD1_6H, avg(HD2_6H) as HD2_6H, avg(HD6_6H) as HD6_6H
   from table_geneid
   group by Geneid
   order by Geneid
   '
 )
+
 
 #check how many gene left in the processed dataset
 length(table_nodup$Geneid)
@@ -51,8 +83,6 @@ length(table_nodup$Geneid)
 all(!duplicated(table_nodup[,1])) 
 #check the first 5 rows
 head(table_nodup)
-
-
 
 
 
@@ -108,7 +138,7 @@ res_2h <- results(dds,contrast=c("condition","2h","blood"))
 res_4h <- results(dds,contrast=c("condition","4h","blood"))
 res_6h <- results(dds,contrast=c("condition","6h","blood"))
 
-resultsNames(dds)
+resultsNames(res_1h)
 
 # log fold change shrinkage(LFC Shrinkage) may not neccessary here. for using it, uncomment next two lines 
 # resLFC <- lfcShrink(dds, coef="condition_1h_vs_blood", type="apeglm")
@@ -162,12 +192,16 @@ res_subgroup <- function(res, alpha=0.1, reg_LFC=1, reg_dir='all'){
 
 
 
-
 #get all 4 upregluated genes
 res_list <- list(res_1h,res_2h,res_4h,res_6h)
 res_list_up <- lapply(res_list, res_subgroup, reg_dir ='up')
 #get all 4 downregluated genes
 res_list_down <- lapply(res_list, res_subgroup, reg_dir ='down')
+
+
+
+
+
 
 
 # output corresponding excel file
@@ -184,6 +218,9 @@ for(i in 1:4){
 }
 
 
+
+
+
 # plot the MAplot with the subset result
 plotMA(res_list_up[[1]], ylim=c(-3,3))
 
@@ -192,9 +229,13 @@ plotMA(res_list_up[[1]], ylim=c(-3,3))
 length(res[(res$log2FoldChange > 1)  & res_sig_pos ,]$baseMean)
 length(res[(res$log2FoldChange < -1)  & res_sig_pos ,]$baseMean)
 
+
+
+
 # get the name of downregulated genes
 # following demo for 1h
 write(file ='gene-downregulated_new.txt',x = row.names(res_list_down[[1]]))
+
 
 #search for a gene whether in down or up regulation
 which(row.names(res_list_up[[1]]) == 'ENSG00000102794')
@@ -229,6 +270,34 @@ genes_down_intersection <- dplyr::intersect(tibble.1h_down$genes, tibble.2h_down
   dplyr::intersect(tibble.4h_down$genes) %>% 
   dplyr::intersect(tibble.6h_down$genes)
 length(genes_down.intersection)
+write.xlsx2(genes_up_intersection.table, 'genes_up_all_time_points_intersection.xlsx')
+
+
+#do intersection over all time points with down-regulation
+tibble.1h_down <- as_tibble(as.data.frame(res_list_down[[1]]), rownames = 'genes')
+tibble.2h_down <- as_tibble(as.data.frame(res_list_down[[2]]), rownames = 'genes')
+tibble.4h_down <- as_tibble(as.data.frame(res_list_down[[3]]), rownames = 'genes')
+tibble.6h_down <- as_tibble(as.data.frame(res_list_down[[4]]), rownames = 'genes')
+genes_down_intersection <- dplyr::intersect(tibble.1h_down$genes, tibble.2h_down$genes) %>% 
+  dplyr::intersect(tibble.4h_down$genes) %>% 
+  dplyr::intersect(tibble.6h_down$genes)
+length(genes_down_intersection)
+
 
 genes_down_intersection.table <- table_nodup[table_nodup$Geneid %in% genes_down_intersection,]
 write.xlsx2(genes_down_intersection.table, 'genes_down_all_time_points_intersection.xlsx')
+
+#can be used to check whether the biomart give more gene_name than the original dataset
+# length(table$Geneid) length(table_nodup$Geneid) 
+# sum(grepl(table$Geneid, pattern = 'ENSG00*') == TRUE)
+# sum(grepl(table_nodup$Geneid, pattern = 'ENSG00*') == TRUE)
+
+
+
+
+overlap_transcriptome_proteomes <- read.xlsx2('overlap transcriptome proteome.xlsx', 
+                                              sheetName = 'Sheet1',
+                                              header = F,
+                                              as.data.frame = T)
+length(which(genes_up_intersection %in% overlap_transcriptome_proteomes$X1))
+
