@@ -269,7 +269,7 @@ tibble.6h_down <- as_tibble(as.data.frame(res_list_down[[4]]), rownames = 'genes
 genes_down_intersection <- dplyr::intersect(tibble.1h_down$genes, tibble.2h_down$genes) %>% 
   dplyr::intersect(tibble.4h_down$genes) %>% 
   dplyr::intersect(tibble.6h_down$genes)
-length(genes_down.intersection)
+length(genes_down_intersection)
 write.xlsx2(genes_up_intersection.table, 'genes_up_all_time_points_intersection.xlsx')
 
 
@@ -293,11 +293,82 @@ write.xlsx2(genes_down_intersection.table, 'genes_down_all_time_points_intersect
 # sum(grepl(table_nodup$Geneid, pattern = 'ENSG00*') == TRUE)
 
 
-
-
 overlap_transcriptome_proteomes <- read.xlsx2('overlap transcriptome proteome.xlsx', 
                                               sheetName = 'Sheet1',
                                               header = F,
                                               as.data.frame = T)
 length(which(genes_up_intersection %in% overlap_transcriptome_proteomes$X1))
+
+
+
+
+
+
+
+
+
+##################### plot
+
+#make the barchart of 4 time point up-regulated gene number
+library(ggplot2)
+library(tidyr)
+dat <- NULL
+dat$time <- as.factor(c('1h', '2h', '4h', '6h'))
+dat$down <- sapply(res_list_down, nrow)
+dat$up <- sapply(res_list_up, nrow)
+dat <- as.data.frame(dat)
+
+ggplot(data = dat, aes(time)) +
+  geom_bar(aes(time , weight = down, fill = 'red'), show.legend = FALSE) +
+  geom_bar(aes(time , weight = up), show.legend = FALSE) +
+  labs(title = "Down regulated genes over time", x = "time", y = "DEGs")
+
+ggplot(data = dat %>% gather(Variable, reg, -time), 
+       aes(x = time, y = reg, fill = Variable)) + 
+  geom_bar(stat = 'identity', position = position_dodge(width = 0.15)) +
+  geom_line(aes(x = time, y = reg, group = Variable, color = Variable),
+            stat="identity", show.legend = F) +
+  geom_point(show.legend = F) +
+  scale_fill_manual(values=c("black", "grey")) +
+  labs(title = "Down regulated genes over time", x = "time", y = "DEGs")
+
+# do venn diagram
+install.packages('VennDiagram')
+library(VennDiagram)
+
+require(gplots) 
+## construct some fake gene names..
+oneName <- function() paste(sample(LETTERS,5,replace=TRUE),collapse="")
+
+
+
+
+
+
+##find the top 100 up_reg intersection genes expression of different time point
+genes_downreg_1h <- tibble.1h_down[(tibble.1h_down$genes %in% genes_down_intersection), ] %>% 
+  arrange(desc(log2FoldChange))
+genes_downreg_2h <- tibble.2h_down[(tibble.2h_down$genes %in% genes_down_intersection), ] %>% 
+  arrange(desc(log2FoldChange))
+genes_downreg_4h <- tibble.4h_down[(tibble.4h_down$genes %in% genes_down_intersection), ] %>% 
+  arrange(desc(log2FoldChange))
+genes_downreg_6h <- tibble.6h_down[(tibble.6h_down$genes %in% genes_down_intersection), ] %>% 
+  arrange(desc(log2FoldChange))
+write.xlsx2(genes_downreg_1h, 'genes_downreg_1h.xlsx')
+write.xlsx2(genes_downreg_2h, 'genes_downreg_2h.xlsx')
+write.xlsx2(genes_downreg_4h, 'genes_downreg_4h.xlsx')
+write.xlsx2(genes_downreg_6h, 'genes_downreg_6h.xlsx')
+
+genes_upreg_1h <- tibble.1h_up[(tibble.1h_up$genes %in% genes_up_intersection), ] %>% 
+  arrange(desc(log2FoldChange))
+genes_upreg_2h <- tibble.2h_up[(tibble.2h_up$genes %in% genes_up_intersection), ] %>% 
+  arrange(desc(log2FoldChange))
+genes_upreg_4h <- tibble.4h_up[(tibble.4h_up$genes %in% genes_up_intersection), ] %>% 
+  arrange(desc(log2FoldChange))
+genes_upreg_6h <- tibble.6h_up[(tibble.6h_up$genes %in% genes_up_intersection), ] %>% 
+  arrange(desc(log2FoldChange))
+write.xlsx2(genes_upreg_1h, 'genes_upreg_1h.xlsx')
+write.xlsx2(genes_upreg_2h, 'genes_upreg_2h.xlsx')
+write.xlsx2(genes_upreg_4h, 'genes_upreg_4h.xlsx')
+write.xlsx2(genes_upreg_6h, 'genes_upreg_6h.xlsx')
 
