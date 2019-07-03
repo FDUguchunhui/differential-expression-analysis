@@ -465,5 +465,53 @@ intersc_up.correlations[intersc_up.correlations$`Pearson P-Value` < 0.05, ] %>%
   arrange(`Pearson P-Value`) %>%
   write.xlsx2(file = 'proteinomics-transcriptomic-up-pearson-significant.xlsx')
 
+#plot the bubble plot
+par(mfrow = c(2,2))
+data.hallmark.enrich <- read.xlsx2(file = 'Enrichment figures R Chunhui.xlsx',
+                          sheetName = 'Hallmarks',
+                          colClasses = c('character','numeric','character', rep('numeric', 4))
+                          )
+data.hallmark.enrich$FDR.q.value = -log10(as.numeric(data.hallmark.enrich$FDR.q.value))
+data.hallmark.enrich$Gene.Set.Name <- factor(data.hallmark.enrich$Gene.Set.Name, 
+                                  levels = data.hallmark.enrich$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
+ggplot(data = data.hallmark.enrich) + 
+  geom_point(aes(x = data.hallmark.enrich$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
+  coord_flip() + 
+  labs(title = 'Hallmark', size = '# of Genes in Overlap (k)', color = 'FDR q value') + 
+  ylab('') +
+  xlab('Genes') + 
+  scale_colour_gradient(low = "red", high = "green")
+  
+data.comb.enrich <- read.xlsx2(file = 'Enrichment figures R Chunhui.xlsx',
+                                   sheetName = 'Combination',
+                                   colClasses = c('character','numeric','character', rep('numeric', 4))
+)
+data.comb.enrich$FDR.q.value = -log10(as.numeric(data.comb.enrich$FDR.q.value))
+data.comb.enrich$Gene.Set.Name <- factor(data.comb.enrich$Gene.Set.Name, 
+                                             levels = data.comb.enrich$Gene.Set.Name[order(data.comb.enrich$X..Genes.in.Overlap..k.)])
+ggplot(data = data.comb.enrich) + 
+  geom_point(aes(x = data.comb.enrich$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
+  coord_flip() + 
+  labs(title = 'combination', size = '# of Genes in Overlap (k)', color = 'FDR q value') + 
+  ylab('') +
+  xlab('Genes') +
+  scale_colour_gradient(low = "red", high = "green")
 
-
+data.tf.enrich <- read.xlsx2(file = 'Enrichment figures R Chunhui.xlsx',
+                                   sheetName = 'TF',
+                                   colClasses = c('character','numeric','character', rep('numeric', 4))
+)
+data.tf.enrich$Gene.Set.Name <- paste('                               ', data.tf.enrich$Gene.Set.Name) 
+data.tf.enrich$FDR.q.value = -log10(as.numeric(data.tf.enrich$FDR.q.value))
+data.tf.enrich$Gene.Set.Name <- factor(data.tf.enrich$Gene.Set.Name, 
+                                             levels = data.tf.enrich$Gene.Set.Name[order(data.tf.enrich$X..Genes.in.Overlap..k.)])
+ggplot(data = data.tf.enrich) + 
+  geom_point(aes(x = data.tf.enrich$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
+  coord_flip() + 
+  labs(title = 'TF', size = '# of Genes in Overlap (k)', color = 'FDR q value') + 
+  ylab('') +
+  xlab('Genes') +
+  scale_colour_gradient(low = "red", high = "green") +
+  scale_size(breaks = c(50, 100, 150, 200, 250)) +
+  theme(legend.position = "right") 
+  
