@@ -12,7 +12,7 @@ library(dplyr)
 
 #this option assigns more RAM for java to enable high-RAM-comsuming processing
 # especially in writing large dataset to .xlxs
-options(java.parameters = "-Xmx2048m")
+options(java.parameters = "-Xmx4048m")
 
 
 # read in the dataset
@@ -50,7 +50,8 @@ table_reordered <- table_merge %>%
   select(Geneid1, external_gene_name, everything())
 table_reordered <- table_reordered[, c(-3, -19)]
 table_reordered$external_gene_name <- 
-  ifelse(is.na(table_reordered$external_gene_name),table_reordered$Geneid1 ,table_reordered$external_gene_name)
+  ifelse(is.na(table_reordered$external_gene_name),table_reordered$Geneid1,
+         table_reordered$external_gene_name)
 
 table_geneid <- table_reordered[,-1]
 colnames(table_geneid)[1] = 'Geneid'
@@ -132,7 +133,8 @@ dds$condition <- droplevels(dds$condition)
 # DEseq analysis
 dds <- DESeq(dds)
 # for different condition you just change 6h to i.e. 1h, 2h, 4h
-# may can be done by lapply() function, not sure how to set the func argument with different arguments
+# may can be done by lapply() function, not sure how to set the func argument
+# with different arguments
 res_1h <- results(dds,contrast=c("condition","1h","blood"))
 res_2h <- results(dds,contrast=c("condition","2h","blood"))
 res_4h <- results(dds,contrast=c("condition","4h","blood"))
@@ -140,7 +142,8 @@ res_6h <- results(dds,contrast=c("condition","6h","blood"))
 
 resultsNames(res_1h)
 
-# log fold change shrinkage(LFC Shrinkage) may not neccessary here. for using it, uncomment next two lines 
+# log fold change shrinkage(LFC Shrinkage) may not neccessary here. for using it,
+# uncomment next two lines 
 # resLFC <- lfcShrink(dds, coef="condition_1h_vs_blood", type="apeglm")
 # resLFC
 
@@ -371,4 +374,96 @@ write.xlsx2(genes_upreg_1h, 'genes_upreg_1h.xlsx')
 write.xlsx2(genes_upreg_2h, 'genes_upreg_2h.xlsx')
 write.xlsx2(genes_upreg_4h, 'genes_upreg_4h.xlsx')
 write.xlsx2(genes_upreg_6h, 'genes_upreg_6h.xlsx')
+
+
+
+
+
+
+# correlation analysis
+proteomics <- read.xlsx2(file = 'Proteomics.xlsx', sheetName = 'Sheet1', stringsAsFactors = F,
+                         colClasses = c('character', 'character', rep("double", 9))
+                         ) %>% 
+  as_tibble()
+count_10h <- read.xlsx2(file = '10hr_normed_counts.xlsx', sheetName = 'counts',
+                        colClasses = c('character', rep("double", 16))) %>% 
+  as_tibble()
+proteomics$GENE.ID <- sapply(proteomics$GENE.ID, sub, pattern = '_HUMAN', replacement = '')
+intersc <- intersect(proteomics$GENE.ID, count_10h$ID)
+x <- count_10h[count_10h$ID %in% intersc, ] %>% 
+  select(ID,CFASN_TM_1:CFASN_TM_3)
+y <- proteomics[proteomics$GENE.ID %in% intersc,] %>% 
+  select(GENE.ID,CFASN_1:CFASN_3)
+
+intersc.up <- as.list(read.xlsx2('overlap transcriptome proteome.xlsx', header = F, 
+                                 sheetIndex = 1, stringsAsFactors = F))
+
+
+
+##get the correaltions of transcriptomics and proteinomics of intersection genes 
+# Initiate data frame of correlation results
+correlations <- data.frame(matrix(NA, nrow=length(x$ID), ncol=6))
+# Assign the first column as the protein names and their site (B2/B4) subset
+correlations[ ,1] <- x[,1]
+# Assign column names
+colnames(correlations) <- c("gene", "Sample Size", "Pearson CC", "Pearson P-Value",             
+                            "Spearman Rho", "Spearman P-Value")
+
+for (i in 1:nrow(correlations)) {
+  cor.pearson <- cor.test(as.numeric(x[i,][,2:4]), as.numeric(y[i,][,2:4]))
+  cor.spearman <- cor.test(as.numeric(x[i,][,2:4]), as.numeric(y[i,][,2:4]), method = 'spearman')
+  #Col 2. Sample size
+  correlations[i,2] <- as.integer(cor.pearson$parameter) + 2
+  #Col 3. pcc
+  correlations[i,3] <- as.numeric(cor.pearson$estimate)
+  #Col 4. pcc p-value
+  correlations[i,4] <- as.numeric(cor.pearson$p.value)
+  #Col 6. spearman's rho
+  correlations[i,5] <- as.numeric(cor.spearman$estimate )
+  #Col 7. spearman's rho p-value
+  correlations[i,6] <- as.numeric(cor.spearman$p.value )
+}
+
+barplot(correlations$gene, correlations$`Pearson CC`)
+
+
+
+
+
+#get the correaltions of all_time intersection genes
+x <- count_10h[count_10h$ID %in% intersc.up$X1, ] %>% 
+  select(ID,CFASN_TM_1:CFASN_TM_3)
+y <- proteomics[proteomics$GENE.ID %in% intersc.up$X1,] %>% 
+  select(GENE.ID,CFASN_1:CFASN_3)
+# Initiate data frame of correlation results
+intersc_up.correlations <- data.frame(matrix(NA, nrow=length(x$ID), ncol=6))
+# Assign the first column as the protein names and their site (B2/B4) subset
+intersc_up.correlations[ ,1] <- x[,1]
+# Assign column names
+colnames(intersc_up.correlations) <- c("gene", "Sample Size", "Pearson CC", "Pearson P-Value",             
+                            "Spearman Rho", "Spearman P-Value")
+
+for (i in 1:nrow(intersc_up.correlations)) {
+  cor.pearson <- cor.test(as.numeric(x[i,][,2:4]), as.numeric(y[i,][,2:4]))
+  cor.spearman <- cor.test(as.numeric(x[i,][,2:4]), as.numeric(y[i,][,2:4]), 
+                           method = 'spearman')
+  #Col 2. Sample size
+  intersc_up.correlations[i,2] <- as.integer(cor.pearson$parameter) + 2
+  #Col 3. pcc
+  intersc_up.correlations[i,3] <- as.numeric(cor.pearson$estimate)
+  #Col 4. pcc p-value
+  intersc_up.correlations[i,4] <- as.numeric(cor.pearson$p.value)
+  #Col 6. spearman's rho
+  intersc_up.correlations[i,5] <- as.numeric(cor.spearman$estimate )
+  #Col 7. spearman's rho p-value
+  intersc_up.correlations[i,6] <- as.numeric(cor.spearman$p.value )
+}
+
+barplot(intersc_up.correlations[intersc_up.correlations$`Pearson P-Value` < 0.05, ]$`Pearson CC`)
+
+intersc_up.correlations[intersc_up.correlations$`Pearson P-Value` < 0.05, ] %>% 
+  arrange(`Pearson P-Value`) %>%
+  write.xlsx2(file = 'proteinomics-transcriptomic-up-pearson-significant.xlsx')
+
+
 
