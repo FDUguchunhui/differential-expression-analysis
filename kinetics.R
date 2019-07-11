@@ -1,12 +1,14 @@
 # # install necessary package
 library(BiocManager)
-
 # if you have install DESeq2, uncomment the followiing line
 # BiocManager::install("DESeq2")
 library(DESeq2)
 library(tidyverse)
 library(biomaRt)
 library(dplyr)
+library(ggplot2)
+library(xlsx)
+library("pheatmap")
 # run next line if you need to get some help from DESeq2
 # browseVignettes("DESeq2")
 
@@ -26,17 +28,17 @@ listDatasets(ensembl)
 mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
 listFilters(mart)
 
-# G_list_1 <- getBM(filters= "hgnc_symbol", 
+# G_list_1 <- getBM(filters= "hgnc_symbol",
 #                 attributes= c("ensembl_gene_id", 'hgnc_symbol')
 #                 ,values=genes,mart= mart)
 
-G_list <- getBM(filters= "ensembl_gene_id", 
+G_list_2 <- getBM(filters= "ensembl_gene_id",
                   attributes= c("ensembl_gene_id", 'external_gene_name'),
                   values=table$Geneid1,
                   mart= mart)
 
 write.xlsx2(G_list_2, 'gene_id_to_name.xlsx')
-#the original dataset has two gene id, 
+#the original dataset has two gene id,
 #and the second one has duplicates, in order to use the second one, need to deal with it
 #!
 
@@ -44,18 +46,18 @@ write.xlsx2(G_list_2, 'gene_id_to_name.xlsx')
 #merge the origin with gene_name from biomart, and arrange it with original datastructure
 table_merge <- sqldf::sqldf('select *
              from "table"
-             left join G_list_2 on "table".Geneid1 = G_list_2.ensembl_gene_id') 
+             left join G_list_2 on "table".Geneid1 = G_list_2.ensembl_gene_id')
 table_reordered <- table_merge %>%
-  as_tibble() %>% 
-  select(Geneid1, external_gene_name, everything())
+  as_tibble() %>%
+  dplyr::select(Geneid1, external_gene_name, everything())
 table_reordered <- table_reordered[, c(-3, -19)]
-table_reordered$external_gene_name <- 
+table_reordered$external_gene_name <-
   ifelse(is.na(table_reordered$external_gene_name),table_reordered$Geneid1,
          table_reordered$external_gene_name)
 
 table_geneid <- table_reordered[,-1]
 colnames(table_geneid)[1] = 'Geneid'
-# omit any row if has missing value 
+# omit any row if has missing value
 # Caution! this may not the best method
 head(table_geneid)
 
@@ -81,7 +83,7 @@ table_nodup <-  sqldf::sqldf('
 length(table_nodup$Geneid)
 
 #check whether there is duplicate now, if there is no duplicate, a True should be returen
-all(!duplicated(table_nodup[,1])) 
+all(!duplicated(table_nodup[,1]))
 #check the first 5 rows
 head(table_nodup)
 
@@ -90,7 +92,7 @@ head(table_nodup)
 
 #make the matrix needed for next step
 
-#use the geneid as row.names 
+#use the geneid as row.names
 table_rownames <- data.frame(table_nodup[,-1], row.names=table_nodup[,1])
 count_maxtrix <- as.matrix(table_rownames)
 # make the mode of matrix integer otherwise it will be number
@@ -114,7 +116,7 @@ dds <- DESeqDataSetFromMatrix(countData = count_maxtrix[,1:15],
                               design = ~ condition)
 
 # pre-filtering
-# by removing rows in which there are very few reads, we reduce the memory size of the dds data object, 
+# by removing rows in which there are very few reads, we reduce the memory size of the dds data object,
 #   and we increase the speed of the transformation and testing functions within DESeq2
 keep <- rowSums(counts(dds)) >= 10
 dds <- dds[keep,]
@@ -122,7 +124,7 @@ dds <- dds[keep,]
 # set dds condition with all time points
 # set 'blood' as base level, the default base level is determined by alphabet order
 # other statement if also available for this purpose
-# Caution!: the document only give example for factor with two levels, not sure about accuracy for 
+# Caution!: the document only give example for factor with two levels, not sure about accuracy for
 #   factor with more than 2 levels
 dds$condition <- factor(dds$condition, levels = c("blood","1h",'2h', '4h', '6h'))
 # drop levels that with no sample
@@ -140,15 +142,15 @@ res_2h <- results(dds,contrast=c("condition","2h","blood"))
 res_4h <- results(dds,contrast=c("condition","4h","blood"))
 res_6h <- results(dds,contrast=c("condition","6h","blood"))
 
-resultsNames(res_1h)
+resultsNames(dds)
 
 # log fold change shrinkage(LFC Shrinkage) may not neccessary here. for using it,
-# uncomment next two lines 
+# uncomment next two lines
 # resLFC <- lfcShrink(dds, coef="condition_1h_vs_blood", type="apeglm")
 # resLFC
 
 
-# next few lines is just a demo for using different param in res() function 
+# next few lines is just a demo for using different param in res() function
 
 # # p-values and adjusted p-values
 # resOrdered <- res[order(res$pvalue),]
@@ -156,12 +158,12 @@ resultsNames(res_1h)
 # sum(res$padj < 0.1, na.rm=TRUE)
 # res05 <- results(dds, alpha=0.05)
 # summary(res05)
-# 
+#
 # plotMA(res, ylim=c(-2,2))
 # # more useful visualize MA-plot for shrunken log2 fold changes
 # plotMA(resLFC, ylim=c(-3,3))
 # abline(h = c(-1,1), col='blue')
-# 
+#
 # idx <- identify(res$baseMean, res$log2FoldChange)
 # rownames(res)[idx]
 
@@ -169,12 +171,12 @@ resultsNames(res_1h)
 # this function is used to subset the neeeded gene from RESULT object
 #function get those LFC greate than 1 and the adjusted P-value is less than 0.1
 res_subgroup <- function(res, alpha=0.1, reg_LFC=1, reg_dir='all'){
-  
-  # res is an obj from DEseq2.result function 
+
+  # res is an obj from DEseq2.result function
   # alpha gives the significant level for adjusted P-value
   # reg gives the regulation level change in log2 fold change in absolute value
   # reg_dir gives which regulation direction you want to subset you gene
-    # three options: all -- up and down 
+    # three options: all -- up and down
     #                up  -- only up regulated
     #                down -- only down regulated
   res_sig_pos <- (res$padj < alpha)
@@ -188,9 +190,9 @@ res_subgroup <- function(res, alpha=0.1, reg_LFC=1, reg_dir='all'){
        else if(reg_dir == 'down'){
                 res_LFC_pos <- (res$log2FoldChange < -reg_LFC)
             }
-  
+
   return(res[res_LFC_pos & res_sig_pos,])
-  
+
 }
 
 
@@ -256,8 +258,8 @@ tibble.1h_up <- as_tibble(as.data.frame(res_list_up[[1]]), rownames = 'genes')
 tibble.2h_up <- as_tibble(as.data.frame(res_list_up[[2]]), rownames = 'genes')
 tibble.4h_up <- as_tibble(as.data.frame(res_list_up[[3]]), rownames = 'genes')
 tibble.6h_up <- as_tibble(as.data.frame(res_list_up[[4]]), rownames = 'genes')
-genes_up_intersection <- dplyr::intersect(tibble.1h_up$genes, tibble.2h_up$genes) %>% 
-  dplyr::intersect(tibble.4h_up$genes) %>% 
+genes_up_intersection <- dplyr::intersect(tibble.1h_up$genes, tibble.2h_up$genes) %>%
+  dplyr::intersect(tibble.4h_up$genes) %>%
   dplyr::intersect(tibble.6h_up$genes)
 length(genes_up_intersection)
 
@@ -269,8 +271,8 @@ tibble.1h_down <- as_tibble(as.data.frame(res_list_down[[1]]), rownames = 'genes
 tibble.2h_down <- as_tibble(as.data.frame(res_list_down[[2]]), rownames = 'genes')
 tibble.4h_down <- as_tibble(as.data.frame(res_list_down[[3]]), rownames = 'genes')
 tibble.6h_down <- as_tibble(as.data.frame(res_list_down[[4]]), rownames = 'genes')
-genes_down_intersection <- dplyr::intersect(tibble.1h_down$genes, tibble.2h_down$genes) %>% 
-  dplyr::intersect(tibble.4h_down$genes) %>% 
+genes_down_intersection <- dplyr::intersect(tibble.1h_down$genes, tibble.2h_down$genes) %>%
+  dplyr::intersect(tibble.4h_down$genes) %>%
   dplyr::intersect(tibble.6h_down$genes)
 length(genes_down_intersection)
 write.xlsx2(genes_up_intersection.table, 'genes_up_all_time_points_intersection.xlsx')
@@ -281,8 +283,8 @@ tibble.1h_down <- as_tibble(as.data.frame(res_list_down[[1]]), rownames = 'genes
 tibble.2h_down <- as_tibble(as.data.frame(res_list_down[[2]]), rownames = 'genes')
 tibble.4h_down <- as_tibble(as.data.frame(res_list_down[[3]]), rownames = 'genes')
 tibble.6h_down <- as_tibble(as.data.frame(res_list_down[[4]]), rownames = 'genes')
-genes_down_intersection <- dplyr::intersect(tibble.1h_down$genes, tibble.2h_down$genes) %>% 
-  dplyr::intersect(tibble.4h_down$genes) %>% 
+genes_down_intersection <- dplyr::intersect(tibble.1h_down$genes, tibble.2h_down$genes) %>%
+  dplyr::intersect(tibble.4h_down$genes) %>%
   dplyr::intersect(tibble.6h_down$genes)
 length(genes_down_intersection)
 
@@ -291,12 +293,12 @@ genes_down_intersection.table <- table_nodup[table_nodup$Geneid %in% genes_down_
 write.xlsx2(genes_down_intersection.table, 'genes_down_all_time_points_intersection.xlsx')
 
 #can be used to check whether the biomart give more gene_name than the original dataset
-# length(table$Geneid) length(table_nodup$Geneid) 
+# length(table$Geneid) length(table_nodup$Geneid)
 # sum(grepl(table$Geneid, pattern = 'ENSG00*') == TRUE)
 # sum(grepl(table_nodup$Geneid, pattern = 'ENSG00*') == TRUE)
 
 
-overlap_transcriptome_proteomes <- read.xlsx2('overlap transcriptome proteome.xlsx', 
+overlap_transcriptome_proteomes <- read.xlsx2('overlap transcriptome proteome.xlsx',
                                               sheetName = 'Sheet1',
                                               header = F,
                                               as.data.frame = T)
@@ -323,11 +325,11 @@ dat <- as.data.frame(dat)
 
 ggplot(data = dat, aes(time)) +
   geom_bar(aes(time , weight = down, fill = 'red'), show.legend = FALSE) +
-  geom_bar(aes(time , weight = up), show.legend = FALSE) +
+  geom_bar(aes(time , weight = up), show.legend = wFALSE) +
   labs(title = "Down regulated genes over time", x = "time", y = "DEGs")
 
-ggplot(data = dat %>% gather(Variable, reg, -time), 
-       aes(x = time, y = reg, fill = Variable)) + 
+ggplot(data = dat %>% gather(Variable, reg, -time),
+       aes(x = time, y = reg, fill = Variable)) +
   geom_bar(stat = 'identity', position = position_dodge(width = 0.15)) +
   geom_line(aes(x = time, y = reg, group = Variable, color = Variable),
             stat="identity", show.legend = F) +
@@ -335,13 +337,7 @@ ggplot(data = dat %>% gather(Variable, reg, -time),
   scale_fill_manual(values=c("black", "grey")) +
   labs(title = "Down regulated genes over time", x = "time", y = "DEGs")
 
-# do venn diagram
-install.packages('VennDiagram')
-library(VennDiagram)
 
-require(gplots) 
-## construct some fake gene names..
-oneName <- function() paste(sample(LETTERS,5,replace=TRUE),collapse="")
 
 
 
@@ -349,26 +345,26 @@ oneName <- function() paste(sample(LETTERS,5,replace=TRUE),collapse="")
 
 
 ##find the top 100 up_reg intersection genes expression of different time point
-genes_downreg_1h <- tibble.1h_down[(tibble.1h_down$genes %in% genes_down_intersection), ] %>% 
+genes_downreg_1h <- tibble.1h_down[(tibble.1h_down$genes %in% genes_down_intersection), ] %>%
   arrange(desc(log2FoldChange))
-genes_downreg_2h <- tibble.2h_down[(tibble.2h_down$genes %in% genes_down_intersection), ] %>% 
+genes_downreg_2h <- tibble.2h_down[(tibble.2h_down$genes %in% genes_down_intersection), ] %>%
   arrange(desc(log2FoldChange))
-genes_downreg_4h <- tibble.4h_down[(tibble.4h_down$genes %in% genes_down_intersection), ] %>% 
+genes_downreg_4h <- tibble.4h_down[(tibble.4h_down$genes %in% genes_down_intersection), ] %>%
   arrange(desc(log2FoldChange))
-genes_downreg_6h <- tibble.6h_down[(tibble.6h_down$genes %in% genes_down_intersection), ] %>% 
+genes_downreg_6h <- tibble.6h_down[(tibble.6h_down$genes %in% genes_down_intersection), ] %>%
   arrange(desc(log2FoldChange))
 write.xlsx2(genes_downreg_1h, 'genes_downreg_1h.xlsx')
 write.xlsx2(genes_downreg_2h, 'genes_downreg_2h.xlsx')
 write.xlsx2(genes_downreg_4h, 'genes_downreg_4h.xlsx')
 write.xlsx2(genes_downreg_6h, 'genes_downreg_6h.xlsx')
 
-genes_upreg_1h <- tibble.1h_up[(tibble.1h_up$genes %in% genes_up_intersection), ] %>% 
+genes_upreg_1h <- tibble.1h_up[(tibble.1h_up$genes %in% genes_up_intersection), ] %>%
   arrange(desc(log2FoldChange))
-genes_upreg_2h <- tibble.2h_up[(tibble.2h_up$genes %in% genes_up_intersection), ] %>% 
+genes_upreg_2h <- tibble.2h_up[(tibble.2h_up$genes %in% genes_up_intersection), ] %>%
   arrange(desc(log2FoldChange))
-genes_upreg_4h <- tibble.4h_up[(tibble.4h_up$genes %in% genes_up_intersection), ] %>% 
+genes_upreg_4h <- tibble.4h_up[(tibble.4h_up$genes %in% genes_up_intersection), ] %>%
   arrange(desc(log2FoldChange))
-genes_upreg_6h <- tibble.6h_up[(tibble.6h_up$genes %in% genes_up_intersection), ] %>% 
+genes_upreg_6h <- tibble.6h_up[(tibble.6h_up$genes %in% genes_up_intersection), ] %>%
   arrange(desc(log2FoldChange))
 write.xlsx2(genes_upreg_1h, 'genes_upreg_1h.xlsx')
 write.xlsx2(genes_upreg_2h, 'genes_upreg_2h.xlsx')
@@ -383,30 +379,30 @@ write.xlsx2(genes_upreg_6h, 'genes_upreg_6h.xlsx')
 # correlation analysis
 proteomics <- read.xlsx2(file = 'Proteomics.xlsx', sheetName = 'Sheet1', stringsAsFactors = F,
                          colClasses = c('character', 'character', rep("double", 9))
-                         ) %>% 
+                         ) %>%
   as_tibble()
 count_10h <- read.xlsx2(file = '10hr_normed_counts.xlsx', sheetName = 'counts',
-                        colClasses = c('character', rep("double", 16))) %>% 
+                        colClasses = c('character', rep("double", 16))) %>%
   as_tibble()
 proteomics$GENE.ID <- sapply(proteomics$GENE.ID, sub, pattern = '_HUMAN', replacement = '')
 intersc <- intersect(proteomics$GENE.ID, count_10h$ID)
-x <- count_10h[count_10h$ID %in% intersc, ] %>% 
+x <- count_10h[count_10h$ID %in% intersc, ] %>%
   select(ID,CFASN_TM_1:CFASN_TM_3)
-y <- proteomics[proteomics$GENE.ID %in% intersc,] %>% 
+y <- proteomics[proteomics$GENE.ID %in% intersc,] %>%
   select(GENE.ID,CFASN_1:CFASN_3)
 
-intersc.up <- as.list(read.xlsx2('overlap transcriptome proteome.xlsx', header = F, 
+intersc.up <- as.list(read.xlsx2('overlap transcriptome proteome.xlsx', header = F,
                                  sheetIndex = 1, stringsAsFactors = F))
 
 
 
-##get the correaltions of transcriptomics and proteinomics of intersection genes 
+##get the correaltions of transcriptomics and proteinomics of intersection genes
 # Initiate data frame of correlation results
 correlations <- data.frame(matrix(NA, nrow=length(x$ID), ncol=6))
 # Assign the first column as the protein names and their site (B2/B4) subset
 correlations[ ,1] <- x[,1]
 # Assign column names
-colnames(correlations) <- c("gene", "Sample Size", "Pearson CC", "Pearson P-Value",             
+colnames(correlations) <- c("gene", "Sample Size", "Pearson CC", "Pearson P-Value",
                             "Spearman Rho", "Spearman P-Value")
 
 for (i in 1:nrow(correlations)) {
@@ -431,21 +427,21 @@ barplot(correlations$gene, correlations$`Pearson CC`)
 
 
 #get the correaltions of all_time intersection genes
-x <- count_10h[count_10h$ID %in% intersc.up$X1, ] %>% 
+x <- count_10h[count_10h$ID %in% intersc.up$X1, ] %>%
   select(ID,CFASN_TM_1:CFASN_TM_3)
-y <- proteomics[proteomics$GENE.ID %in% intersc.up$X1,] %>% 
+y <- proteomics[proteomics$GENE.ID %in% intersc.up$X1,] %>%
   select(GENE.ID,CFASN_1:CFASN_3)
 # Initiate data frame of correlation results
 intersc_up.correlations <- data.frame(matrix(NA, nrow=length(x$ID), ncol=6))
 # Assign the first column as the protein names and their site (B2/B4) subset
 intersc_up.correlations[ ,1] <- x[,1]
 # Assign column names
-colnames(intersc_up.correlations) <- c("gene", "Sample Size", "Pearson CC", "Pearson P-Value",             
+colnames(intersc_up.correlations) <- c("gene", "Sample Size", "Pearson CC", "Pearson P-Value",
                             "Spearman Rho", "Spearman P-Value")
 
 for (i in 1:nrow(intersc_up.correlations)) {
   cor.pearson <- cor.test(as.numeric(x[i,][,2:4]), as.numeric(y[i,][,2:4]))
-  cor.spearman <- cor.test(as.numeric(x[i,][,2:4]), as.numeric(y[i,][,2:4]), 
+  cor.spearman <- cor.test(as.numeric(x[i,][,2:4]), as.numeric(y[i,][,2:4]),
                            method = 'spearman')
   #Col 2. Sample size
   intersc_up.correlations[i,2] <- as.integer(cor.pearson$parameter) + 2
@@ -461,7 +457,7 @@ for (i in 1:nrow(intersc_up.correlations)) {
 
 barplot(intersc_up.correlations[intersc_up.correlations$`Pearson P-Value` < 0.05, ]$`Pearson CC`)
 
-intersc_up.correlations[intersc_up.correlations$`Pearson P-Value` < 0.05, ] %>% 
+intersc_up.correlations[intersc_up.correlations$`Pearson P-Value` < 0.05, ] %>%
   arrange(`Pearson P-Value`) %>%
   write.xlsx2(file = 'proteinomics-transcriptomic-up-pearson-significant.xlsx')
 
@@ -472,27 +468,27 @@ data.hallmark.enrich <- read.xlsx2(file = 'Enrichment figures R Chunhui.xlsx',
                           colClasses = c('character','numeric','character', rep('numeric', 4))
                           )
 data.hallmark.enrich$FDR.q.value = -log10(as.numeric(data.hallmark.enrich$FDR.q.value))
-data.hallmark.enrich$Gene.Set.Name <- factor(data.hallmark.enrich$Gene.Set.Name, 
+data.hallmark.enrich$Gene.Set.Name <- factor(data.hallmark.enrich$Gene.Set.Name,
                                   levels = data.hallmark.enrich$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
-ggplot(data = data.hallmark.enrich) + 
+ggplot(data = data.hallmark.enrich) +
   geom_point(aes(x = data.hallmark.enrich$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
-  coord_flip() + 
-  labs(title = 'Hallmark', size = '# of Genes in Overlap (k)', color = 'FDR q value') + 
+  coord_flip() +
+  labs(title = 'Hallmark', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
   ylab('') +
-  xlab('Genes') + 
+  xlab('Genes') +
   scale_colour_gradient(low = "red", high = "green")
-  
+
 data.comb.enrich <- read.xlsx2(file = 'Enrichment figures R Chunhui.xlsx',
                                    sheetName = 'Combination',
                                    colClasses = c('character','numeric','character', rep('numeric', 4))
 )
 data.comb.enrich$FDR.q.value = -log10(as.numeric(data.comb.enrich$FDR.q.value))
-data.comb.enrich$Gene.Set.Name <- factor(data.comb.enrich$Gene.Set.Name, 
+data.comb.enrich$Gene.Set.Name <- factor(data.comb.enrich$Gene.Set.Name,
                                              levels = data.comb.enrich$Gene.Set.Name[order(data.comb.enrich$X..Genes.in.Overlap..k.)])
-ggplot(data = data.comb.enrich) + 
+ggplot(data = data.comb.enrich) +
   geom_point(aes(x = data.comb.enrich$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
-  coord_flip() + 
-  labs(title = 'combination', size = '# of Genes in Overlap (k)', color = 'FDR q value') + 
+  coord_flip() +
+  labs(title = 'combination', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
   ylab('') +
   xlab('Genes') +
   scale_colour_gradient(low = "red", high = "green")
@@ -501,17 +497,41 @@ data.tf.enrich <- read.xlsx2(file = 'Enrichment figures R Chunhui.xlsx',
                                    sheetName = 'TF',
                                    colClasses = c('character','numeric','character', rep('numeric', 4))
 )
-data.tf.enrich$Gene.Set.Name <- paste('                               ', data.tf.enrich$Gene.Set.Name) 
+data.tf.enrich$Gene.Set.Name <- paste('                               ', data.tf.enrich$Gene.Set.Name)
 data.tf.enrich$FDR.q.value = -log10(as.numeric(data.tf.enrich$FDR.q.value))
-data.tf.enrich$Gene.Set.Name <- factor(data.tf.enrich$Gene.Set.Name, 
+data.tf.enrich$Gene.Set.Name <- factor(data.tf.enrich$Gene.Set.Name,
                                              levels = data.tf.enrich$Gene.Set.Name[order(data.tf.enrich$X..Genes.in.Overlap..k.)])
-ggplot(data = data.tf.enrich) + 
+ggplot(data = data.tf.enrich) +
   geom_point(aes(x = data.tf.enrich$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
-  coord_flip() + 
-  labs(title = 'TF', size = '# of Genes in Overlap (k)', color = 'FDR q value') + 
+  coord_flip() +
+  labs(title = 'TF', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
   ylab('') +
   xlab('Genes') +
   scale_colour_gradient(low = "red", high = "green") +
   scale_size(breaks = c(50, 100, 150, 200, 250)) +
-  theme(legend.position = "right") 
-  
+  theme(legend.position = "right")
+
+# plot heatmap
+gene_intsc.table <- read.xlsx2(file = 'heatmap CF upregulated.xlsx', sheetIndex = 1,
+                               stringsAsFactors = F, header = F)
+
+lfc_ts_expr.tibble <- tibble(gene_name = rownames(res_1h),
+      lfc.1h = res_1h$log2FoldChange,
+      lfc.2h = res_1h$log2FoldChange,
+      lfc.4h = res_1h$log2FoldChange,
+      lfc.6h =res_1h$log2FoldChange)
+
+gene_intsc_heatmap.tibble <- lfc_ts_expr.tibble %>%
+  dplyr::filter(gene_name %in% gene_intsc.table[,1])
+gene_intsc_heatmap.matrix <- as.matrix(gene_intsc_heatmap.tibble[,2:5])
+rownames(gene_intsc_heatmap.matrix) <- as.vector(as.list((gene_intsc_heatmap.tibble[,1]))[[1]])
+
+gene_intsc_heatmap.table2 <- rbind(gene_intsc_heatmap.tibble[, c(1,2)],
+                                   gene_intsc_heatmap.tibble[, c(1,3)],
+                                   gene_intsc_heatmap.tibble[, c(1,4)],
+                                   gene_intsc_heatmap.tibble[, c(1,5)])
+
+ggplot(gene_intsc_heatmap.tibble, aes(x = gene_name, y = ))
+
+pheatmap(gene_intsc_heatmap.matrix)
+heatmap.2(gene_intsc_heatmap.matrix)
