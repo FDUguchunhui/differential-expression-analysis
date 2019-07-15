@@ -143,6 +143,30 @@ write.xlsx2(res_CFASN_up, file = 'res_CFASN_up.xlsx')
 write.xlsx2(res_LTB4_down,file = 'res_LTB4_down.xlsx')
 write.xlsx2(res_CFASN_down, file = 'res_CFASN_down.xlsx')
 
+
+# intersection for up and down
+res_up_intersection <- sqldf::sqldf('
+              select *
+              from res_LTB4_up
+              inner join res_CFASN_up on
+                  res_LTB4_up.gene_name = res_CFASN_up.gene_name
+             ') %>%   dplyr::select(gene_name, baseMean:padj)
+
+res_down_intersection <- sqldf::sqldf('
+              select *
+              from res_LTB4_down
+              inner join res_CFASN_down on
+                  res_LTB4_down.gene_name = res_CFASN_down.gene_name
+             ') %>%   dplyr::select(gene_name, baseMean:padj)
+
+write.xlsx2(res_up_intersection,file = 'res_up_intersection.xlsx')
+write.xlsx2(res_down_intersection,file = 'res_down_intersection.xlsx')
+
+
+
+
+
+
 res_LTB4_up.unique <- sqldf::sqldf('
               select *
               from res_LTB4_up

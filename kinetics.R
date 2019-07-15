@@ -420,7 +420,7 @@ for (i in 1:nrow(correlations)) {
   correlations[i,6] <- as.numeric(cor.spearman$p.value )
 }
 
-barplot(correlations$gene, correlations$`Pearson CC`)
+plot(correlations$`Pearson CC`, pch = 16, cex = 0.5)
 
 
 
@@ -526,12 +526,5 @@ gene_intsc_heatmap.tibble <- lfc_ts_expr.tibble %>%
 gene_intsc_heatmap.matrix <- as.matrix(gene_intsc_heatmap.tibble[,2:5])
 rownames(gene_intsc_heatmap.matrix) <- as.vector(as.list((gene_intsc_heatmap.tibble[,1]))[[1]])
 
-gene_intsc_heatmap.table2 <- rbind(gene_intsc_heatmap.tibble[, c(1,2)],
-                                   gene_intsc_heatmap.tibble[, c(1,3)],
-                                   gene_intsc_heatmap.tibble[, c(1,4)],
-                                   gene_intsc_heatmap.tibble[, c(1,5)])
-
-ggplot(gene_intsc_heatmap.tibble, aes(x = gene_name, y = ))
-
-pheatmap(gene_intsc_heatmap.matrix)
-heatmap.2(gene_intsc_heatmap.matrix)
+pheatmap(gene_intsc_heatmap.matrix, cluster_cols = F)
+heatmap.2(gene_intsc_heatmap.matrix, Colv = FALSE)
