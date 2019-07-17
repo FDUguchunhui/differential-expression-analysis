@@ -14,15 +14,19 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## PART 1: Preparation: Packages & options
+if you have problem about 'could not find function', make sure you got all the library first
 ```{r packages, include=FALSE}
 library(BiocManager)
 # if you have install DESeq2, uncomment the followiing line
 # BiocManager::install("DESeq2")
 library(DESeq2)
+library(sqldf)
 library(tidyverse)
 library(biomaRt)
 library(dplyr)
-library(xlsx)
+library(xlsx) 
+library(pheatmap) #for heatmap
+library(gplots) #for heatmap
 # run next line if you need to get some help from DESeq2
 # browseVignettes("DESeq2")
 ```
@@ -31,6 +35,7 @@ library(xlsx)
 # this option assigns more RAM for java to enable high-RAM-comsuming processing
 # especially in writing large dataset to .xlxs
 options(java.parameters = "-Xmx4048m")
+
 ```
 
 ## PART2: Data preparation
@@ -222,6 +227,13 @@ resultsNames(dds)
 ```
 
 ### 4.2 Build Function for subset result
+`res_subgroup` is a useful function to subset the result from DESeq, it has 4 parameter
+`res` is an instance of DESeq.result object
+`alpha` is the boundary for adjusted p-value, default 0.1 if not specified.
+`reg_dir` is the direction of your `alpha` value, 'all', 'up' and 'down' can be used.
+  all  -- up and down regulated 
+  up   -- up regulated only
+  down -- down regulated only
 ```{r subset result}
 # this function is used to subset the neeeded gene from RESULT object
 #function get those LFC greate than 1 and the adjusted P-value is less than 0.1
@@ -252,7 +264,7 @@ res_subgroup <- function(res, alpha=0.1, reg_LFC=1, reg_dir='all'){
 
 ```
 
-You can use `lapply` to subset a list of dataset togather
+You can use `lapply` to apply a function to a list of dataset togather of different `condition`, e.g. 1h_vs_blood, 2h_vs_blood, 4h_vs_blood and 6h_vs_blood
 ```{r}
 #get all 4 upregluated genes
 res_list <- list(res_1h,res_2h,res_4h,res_6h)
@@ -261,8 +273,8 @@ res_list_up <- lapply(res_list, res_subgroup, reg_dir ='up')
 res_list_down <- lapply(res_list, res_subgroup, reg_dir ='down')
 ```
 
-This code block is used for easily output xlxs file
-```{r output xlsx file}
+This code block is used for easily output xlxs file with mnemonic name.
+```{r output xlsx file, eval=FALSE, include=FALSE}
 # output corresponding excel file
 library(xlsx)
 # genes that are upregulated
@@ -277,6 +289,24 @@ for(i in 1:4){
 }
 ```
 
+
+### A-not-B subset with sql
+You can use code below to subset genes that only in A `res_LTB4_up` and not in B `res_CFASN_up`
+
+```{r eval=FALSE, include=FALSE}
+res_LTB4_up.unique <- sqldf::sqldf('
+              select *
+              from res_LTB4_up
+              where res_LTB4_up.gene_name not in (
+                select res_LTB4_up.gene_name
+                from res_LTB4_up
+                inner join res_CFASN_up on
+                  res_LTB4_up.gene_name = res_CFASN_up.gene_name
+              )
+             ')
+```
+
+
 ## PART 5: Analysis and plot
 
 
@@ -290,50 +320,91 @@ plotMA(res_list_up[[1]], ylim=c(-3,3))
 
 
 ### 5.2 Correlation 
+This is a demo for correlation gene in a list `overlap transcriptome proteome.xlsx` of **expression of proteomics**(`Proteomics.xlsx`) and **expression of RNAseq**(`10hr_normed_counts.xlsx`). 
+
+First we need to get the RNAseq and proteomics level from two data files.
 ```{r}
 # correlation analysis
+#read in data as tibble
 proteomics <- read.xlsx2(file = 'Proteomics.xlsx', sheetName = 'Sheet1', stringsAsFactors = F,
                          colClasses = c('character', 'character', rep("double", 9))
                          ) %>% 
   as_tibble()
+
 count_10h <- read.xlsx2(file = '10hr_normed_counts.xlsx', sheetName = 'counts',
                         colClasses = c('character', rep("double", 16))) %>% 
   as_tibble()
+
+# delete the '_HUMAN' suffix in the GENE.ID variable of proteomics dataset.
 proteomics$GENE.ID <- sapply(proteomics$GENE.ID, sub, pattern = '_HUMAN', replacement = '')
+
+# 
 intersc <- intersect(proteomics$GENE.ID, count_10h$ID)
 x <- count_10h[count_10h$ID %in% intersc, ] %>% 
   select(ID,CFASN_TM_1:CFASN_TM_3)
 y <- proteomics[proteomics$GENE.ID %in% intersc,] %>% 
   select(GENE.ID,CFASN_1:CFASN_3)
 
+```
+
+Read in the list of genes need to analyze correlation.
+```{R}
 intersc.up <- as.list(read.xlsx2('overlap transcriptome proteome.xlsx', header = F, 
                                  sheetIndex = 1, stringsAsFactors = F))
 
 ```
 
+```{r warning=FALSE}
+##get the correaltions of transcriptomics and proteinomics of intersection genes
+# Initiate data frame of correlation results
+correlations <- data.frame(matrix(NA, nrow=length(x$ID), ncol=6))
+# Assign the first column as the protein names and their site (B2/B4) subset
+correlations[ ,1] <- x[,1]
+# Assign column names
+colnames(correlations) <- c("gene", "Sample Size", "Pearson CC", "Pearson P-Value",
+                            "Spearman Rho", "Spearman P-Value")
+
+for (i in 1:nrow(correlations)) {
+  cor.pearson <- cor.test(as.numeric(x[i,][,2:4]), as.numeric(y[i,][,2:4]))
+  cor.spearman <- cor.test(as.numeric(x[i,][,2:4]), as.numeric(y[i,][,2:4]), method = 'spearman')
+  #Col 2. Sample size
+  correlations[i,2] <- as.integer(cor.pearson$parameter) + 2
+  #Col 3. pcc
+  correlations[i,3] <- as.numeric(cor.pearson$estimate)
+  #Col 4. pcc p-value
+  correlations[i,4] <- as.numeric(cor.pearson$p.value)
+  #Col 6. spearman's rho
+  correlations[i,5] <- as.numeric(cor.spearman$estimate )
+  #Col 7. spearman's rho p-value
+  correlations[i,6] <- as.numeric(cor.spearman$p.value )
+}
+
+```
+
+Due to the small sample size, most of points has a large P-value, you can use the code commented to get those with p-value < 0.05
+```{r}
+#correlations$`Pearson CC`[which(correlations$`Pearson P-Value` < 0.05)]
+plot(correlations$`Pearson CC`, pch = 16, cex = 0.5)
+```
 
 
 
-
-### 5.3
+### 5.3 plot trend through time
+First get the data we need
 ```{r}
 library(ggplot2)
 library(tidyr)
 dat <- NULL
 dat$time <- as.factor(c('1h', '2h', '4h', '6h'))
+#get the number of genes which have significant differential expression
 dat$down <- sapply(res_list_down, nrow)
 dat$up <- sapply(res_list_up, nrow)
 dat <- as.data.frame(dat)
-
-ggplot(data = dat, aes(time)) +
-  geom_bar(aes(time , weight = down, fill = 'red'), show.legend = FALSE) +
-  geom_bar(aes(time , weight = up), show.legend = FALSE) +
-  labs(title = "Down regulated genes over time", x = "time", y = "DEGs")
-
 ```
 
+The plot show the there is a huge increase of # of down-regulated genes  
 ```{r}
-
+# gather function is useful to takes multiple columns and collapses into key-value pairs
 ggplot(data = dat %>% gather(Variable, reg, -time), 
        aes(x = time, y = reg, fill = Variable)) + 
   geom_bar(stat = 'identity', position = position_dodge(width = 0.15)) +
@@ -346,20 +417,28 @@ ggplot(data = dat %>% gather(Variable, reg, -time),
 
 
 ### 5.4 Bubble plot
-
+Bubble plot for gene enrichment analysis.
+Data preparation for the bubble plot.
 ```{r}
 data.tf.enrich <- read.xlsx2(file = 'Enrichment figures R Chunhui.xlsx',
                                    sheetName = 'TF',
                                    colClasses = c('character','numeric','character', rep('numeric', 4))
 )
+
+head(data.tf.enrich)
+```
+Your enrichment data may looks like this.
+
+
+```{R}
 data.tf.enrich$Gene.Set.Name <- paste('                               ', data.tf.enrich$Gene.Set.Name) 
 data.tf.enrich$FDR.q.value = -log10(as.numeric(data.tf.enrich$FDR.q.value))
-data.tf.enrich$Gene.Set.Name <- factor(data.tf.enrich$Gene.Set.Name, 
-                                             levels = data.tf.enrich$Gene.Set.Name[order(data.tf.enrich$X..Genes.in.Overlap..k.)])
-
-
+#order the data by # of genes overlaped
+data.tf.enrich$Gene.Set.Name <- factor(data.tf.enrich$Gene.Set.Name,                                              levels=data.tf.enrich$Gene.Set.Name[order(data.tf.enrich$X..Genes.in.Overlap..k.)])
 ```
 
+The color indicates `FDR q value`.
+The size of circle indicates `# of genes overlaped`.
 ```{r}
 ggplot(data = data.tf.enrich) + 
   geom_point(aes(x = data.tf.enrich$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
@@ -371,6 +450,39 @@ ggplot(data = data.tf.enrich) +
   scale_size(breaks = c(50, 100, 150, 200, 250)) +
   theme(legend.position = "right") 
   
+```
+
+# 5.5 heatmap
+Heatmap for a list of genes `heatmap CF upregulated.xlsx` among the four time points
+First, get the matrix for heatmap.
+```{r}
+gene_intsc.table <- read.xlsx2(file = 'heatmap CF upregulated.xlsx', sheetIndex = 1,
+                               stringsAsFactors = F, header = F)
+
+lfc_ts_expr.tibble <- tibble(gene_name = rownames(res_1h),
+      lfc.1h = res_1h$log2FoldChange,
+      lfc.2h = res_1h$log2FoldChange,
+      lfc.4h = res_1h$log2FoldChange,
+      lfc.6h =res_1h$log2FoldChange)
+
+#filter genes and create matrix with column names
+gene_intsc_heatmap.tibble <- lfc_ts_expr.tibble %>%
+  dplyr::filter(gene_name %in% gene_intsc.table[,1])
+gene_intsc_heatmap.matrix <- as.matrix(gene_intsc_heatmap.tibble[,2:5])
+
+# set the row names for matrix
+rownames(gene_intsc_heatmap.matrix) <- as.vector(as.list(gene_intsc_heatmap.tibble[,1])[[1]])
+```
+
+**You may need to zoom or set resolution in export to see gene name clearly**
+```{R}
+pheatmap(gene_intsc_heatmap.matrix, cluster_cols = F)
+```
+`pheatmap` and `heatmap.2` are two function available to plot heatmap.
+see package `pheatmap` and `gplots` for more details.
+```{r}
+# Since we don't need column cluster, we set Colv = FALSE and dendrogram = 'row'
+heatmap.2(gene_intsc_heatmap.matrix, Colv = FALSE, dendrogram = 'row')
 ```
 
 

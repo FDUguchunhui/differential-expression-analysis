@@ -528,3 +528,114 @@ rownames(gene_intsc_heatmap.matrix) <- as.vector(as.list((gene_intsc_heatmap.tib
 
 pheatmap(gene_intsc_heatmap.matrix, cluster_cols = F)
 heatmap.2(gene_intsc_heatmap.matrix, Colv = FALSE)
+
+
+
+
+
+
+
+
+
+
+#plot the bubble plot for top 100 genes
+biological_process.table <- read.xlsx2(file = 'Bubbleplots Chunhui Top100 Up.xlsx',
+                                   sheetName = 'BIological process',
+                                   colClasses = c('character','numeric','character', rep('numeric', 4))
+)
+
+biological_process.table$FDR.q.value = -log10(as.numeric(biological_process.table$FDR.q.value))
+biological_process.table$Gene.Set.Name <- factor(biological_process.table$Gene.Set.Name,
+                                             levels = biological_process.table$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
+
+ggplot(data = biological_process.table) +
+  geom_point(aes(x = biological_process.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
+  coord_flip() +
+  labs(title = 'Biological process', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
+  ylab('') +
+  xlab('Genes') +
+  scale_colour_gradient(low = "red", high = "green")
+
+
+
+
+
+
+
+
+cell_component.table <- read.xlsx2(file = 'Bubbleplots Chunhui Top100 Up.xlsx',
+                                       sheetName = 'Cel componet',
+                                       colClasses = c('character','numeric','character', rep('numeric', 4))
+)
+
+cell_component.table$FDR.q.value = -log10(as.numeric(cell_component.table$FDR.q.value))
+cell_component.table$Gene.Set.Name <- factor(cell_component.table$Gene.Set.Name,
+                                                 levels = cell_component.table$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
+
+ggplot(data = cell_component.table) +
+  geom_point(aes(x = cell_component.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
+  coord_flip() +
+  labs(title = 'Cell component', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
+  ylab('') +
+  xlab('Genes') +
+  scale_colour_gradient(low = "red", high = "green")
+
+
+
+
+
+
+
+molecular_function.table <- read.xlsx2(file = 'Bubbleplots Chunhui Top100 Up.xlsx',
+                                       sheetName = 'Molecular Function ',
+                                       colClasses = c('character','numeric','character', rep('numeric', 4))
+)
+
+molecular_function.table$FDR.q.value = -log10(as.numeric(molecular_function.table$FDR.q.value))
+molecular_function.table$Gene.Set.Name <- factor(molecular_function.table$Gene.Set.Name,
+                                                 levels = molecular_function.table$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
+
+ggplot(data = molecular_function.table) +
+  geom_point(aes(x = molecular_function.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
+  coord_flip() +
+  labs(title = 'molecular function', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
+  ylab('') +
+  xlab('Genes') +
+  scale_colour_gradient(low = "red", high = "green")
+
+# another bubble plot
+pattern1.table <- read.xlsx2(file = 'bubble plot patterns.xlsx',
+                                       sheetName = 'pattern1',
+                                       colClasses = c('character','numeric','character', rep('numeric', 4))
+)
+
+pattern1.table$FDR.q.value = -log10(as.numeric(pattern1.table$FDR.q.value))
+pattern1.table$Gene.Set.Name <- factor(pattern1.table$Gene.Set.Name,
+                                                 levels = pattern1.table$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
+
+ggplot(data = pattern1.table) +
+  geom_point(aes(x = pattern1.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
+  coord_flip() +
+  labs(title = 'pattern 1', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
+  ylab('') +
+  xlab('Genes') +
+  scale_colour_gradient(low = "red", high = "green")
+
+
+pattern2.table <- read.xlsx2(file = 'bubble plot patterns.xlsx',
+                             sheetName = 'pattern 2',
+                             colClasses = c('character','numeric','character', rep('numeric', 4))
+)
+
+pattern2.table$FDR.q.value = -log10(as.numeric(pattern2.table$FDR.q.value))
+pattern2.table$Gene.Set.Name <- factor(pattern2.table$Gene.Set.Name,
+                                       levels = pattern2.table$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
+
+ggplot(data = pattern2.table) +
+  geom_point(aes(x = pattern2.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
+  coord_flip() +
+  labs(title = 'pattern 2', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
+  ylab('') +
+  xlab('Genes') +
+  scale_colour_gradient(low = "lightsteelblue1", high = "blue4")
+
