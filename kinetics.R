@@ -551,10 +551,18 @@ biological_process.table$Gene.Set.Name <- factor(biological_process.table$Gene.S
 ggplot(data = biological_process.table) +
   geom_point(aes(x = biological_process.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
   coord_flip() +
-  labs(title = 'Biological process', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
+  labs(title = 'Biological process', size = '# of Genes in Overlap (k)', color = '-log10 q value') +
   ylab('') +
   xlab('Genes') +
-  scale_colour_gradient(low = "red", high = "green")
+  scale_colour_gradient(low = "lightsteelblue1", high = "blue4") +
+  guides(
+    color = guide_colorbar(order = 1),
+    fill = guide_legend(order = 0)
+  )
+
+
+
+
 
 
 
@@ -575,10 +583,14 @@ cell_component.table$Gene.Set.Name <- factor(cell_component.table$Gene.Set.Name,
 ggplot(data = cell_component.table) +
   geom_point(aes(x = cell_component.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
   coord_flip() +
-  labs(title = 'Cell component', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
+  labs(title = 'Cell component', size = '# of Genes in Overlap (k)', color = '-log10 FDR q value') +
   ylab('') +
   xlab('Genes') +
-  scale_colour_gradient(low = "red", high = "green")
+  scale_colour_gradient(low = "lightsteelblue1", high = "blue4") +
+  guides(
+    color = guide_colorbar(order = 0),
+    fill = guide_legend(order = 1)
+  )
 
 
 
@@ -598,10 +610,14 @@ molecular_function.table$Gene.Set.Name <- factor(molecular_function.table$Gene.S
 ggplot(data = molecular_function.table) +
   geom_point(aes(x = molecular_function.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
   coord_flip() +
-  labs(title = 'molecular function', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
+  labs(title = 'molecular function', size = '# of Genes in Overlap (k)', color = '-log10 FDR q value') +
   ylab('') +
   xlab('Genes') +
-  scale_colour_gradient(low = "red", high = "green")
+  scale_colour_gradient(low = "lightsteelblue1", high = "blue4") +
+  guides(
+    color = guide_colorbar(order = 0),
+    fill = guide_legend(order = 1)
+  )
 
 # another bubble plot
 pattern1.table <- read.xlsx2(file = 'bubble plot patterns.xlsx',
@@ -616,10 +632,15 @@ pattern1.table$Gene.Set.Name <- factor(pattern1.table$Gene.Set.Name,
 ggplot(data = pattern1.table) +
   geom_point(aes(x = pattern1.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
   coord_flip() +
-  labs(title = 'pattern 1', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
+  labs(title = 'pattern 1', size = '# of Genes in Overlap (k)', color = '-log10 FDR q value') +
   ylab('') +
   xlab('Genes') +
-  scale_colour_gradient(low = "red", high = "green")
+  scale_colour_gradient(low = "lightsteelblue1", high = "blue4") +
+  guides(
+    color = guide_colorbar(order = 0),
+    fill = guide_legend(order = 1)
+  )
+
 
 
 pattern2.table <- read.xlsx2(file = 'bubble plot patterns.xlsx',
@@ -634,8 +655,100 @@ pattern2.table$Gene.Set.Name <- factor(pattern2.table$Gene.Set.Name,
 ggplot(data = pattern2.table) +
   geom_point(aes(x = pattern2.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
   coord_flip() +
-  labs(title = 'pattern 2', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
+  labs(title = 'pattern 2', size = '# of Genes in Overlap (k)', color = '-log10 FDR q value') +
+  ylab('') +
+  xlab('') +
+  scale_colour_gradient(low = "lightsteelblue1", high = "blue4") +
+  guides(
+    color = guide_colorbar(order = 0),
+    fill = guide_legend(order = 1)
+  )
+
+
+#**************************bubble plot
+p1_combination.table <- read.xlsx2(file = 'bubbleplot data.xlsx',
+                             sheetName = 'p1_combination',
+                             colClasses = c('character','numeric','character', rep('numeric', 4))
+)
+
+p1_combination.table$FDR.q.value = -log10(as.numeric(p1_combination.table$FDR.q.value))
+p1_combination.table$Gene.Set.Name <- factor(p1_combination.table$Gene.Set.Name,
+                                       levels = p1_combination.table$Gene.Set.Name[order(p1_combination.table$FDR.q.value)])
+
+ggplot(data = p1_combination.table) +
+  geom_point(aes(x = p1_combination.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
+  coord_flip() +
+  labs(title = 'pattern 1 Combination', size = '# of Genes in Overlap (k)', color = '-log10 FDR q value') +
+  ylab('') +
+  xlab('') +
+  scale_colour_gradient(low = "lightsteelblue1", high = "blue4") +
+  guides(
+    color = guide_colorbar(order = 0),
+    fill = guide_legend(order = 1)
+  )
+
+###############pattern 1 TFT
+p1_TFT.table <- read.xlsx2(file = 'bubbleplot data.xlsx',
+                                   sheetName = 'p1_TFT',
+                                   colClasses = c('character','numeric','character', rep('numeric', 4))
+)
+
+p1_TFT.table$FDR.q.value = -log10(as.numeric(p1_TFT.table$FDR.q.value))
+p1_TFT.table$Gene.Set.Name <- factor(p1_TFT.table$Gene.Set.Name,
+                                             levels = p1_TFT.table$Gene.Set.Name[order(p1_TFT.table$FDR.q.value)])
+
+ggplot(data = p1_TFT.table) +
+  geom_point(aes(x = as.factor(p1_TFT.table$Gene.Set.Name), y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
+  coord_flip() +
+  labs(title = 'pattern 1 TFT', size = '# of Genes in Overlap (k)', color = '-log10 FDR q value') +
+  ylab('') +
+  xlab('') +
+  scale_colour_gradient(low = "lightsteelblue1", high = "blue4") +
+  guides(
+    color = guide_colorbar(order = 0),
+    fill = guide_legend(order = 1)
+  )
+
+####pattern 2 combination
+p2_combination.table <- read.xlsx2(file = 'bubbleplot data.xlsx',
+                           sheetName = 'p2_combination',
+                           colClasses = c('character','numeric','character', rep('numeric', 4))
+)
+
+p2_combination.table$FDR.q.value = -log10(as.numeric(p2_combination.table$FDR.q.value))
+p2_combination.table$Gene.Set.Name <- factor(p2_combination.table$Gene.Set.Name,
+                                     levels = p2_combination.table$Gene.Set.Name[order(p2_combination.table$FDR.q.value)])
+
+ggplot(data = p2_combination.table) +
+  geom_point(aes(x = p2_combination.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
+  coord_flip() +
+  labs(title = 'pattern 2 Combination', size = '# of Genes in Overlap (k)', color = '-log10 FDR q value') +
+  ylab('') +
+  xlab('') +
+  scale_colour_gradient(low = "lightsteelblue1", high = "blue4") +
+  guides(
+    color = guide_colorbar(order = 0),
+    fill = guide_legend(order = 1)
+  )
+
+##pattern 2 TFT
+p2_TFT.table <- read.xlsx2(file = 'bubbleplot data.xlsx',
+                           sheetName = 'p2_TFT',
+                           colClasses = c('character','numeric','character', rep('numeric', 4))
+)
+
+p2_TFT.table$FDR.q.value = -log10(as.numeric(p2_TFT.table$FDR.q.value))
+p2_TFT.table$Gene.Set.Name <- factor(p2_TFT.table$Gene.Set.Name,
+                                     levels = p2_TFT.table$Gene.Set.Name[order(p2_TFT.table$FDR.q.value)])
+
+ggplot(data = p2_TFT.table) +
+  geom_point(aes(x =  p2_TFT.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
+  coord_flip() +
+  labs(title = 'pattern 2 TFT', size = '# of Genes in Overlap (k)', color = '-log10 FDR q value') +
   ylab('') +
   xlab('Genes') +
-  scale_colour_gradient(low = "lightsteelblue1", high = "blue4")
-
+  scale_colour_gradient(low = "lightsteelblue1", high = "blue4") +
+  guides(
+    color = guide_colorbar(order = 0),
+    fill = guide_legend(order = 1)
+  )
