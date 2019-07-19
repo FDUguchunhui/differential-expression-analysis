@@ -14,6 +14,16 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## PART 1: Preparation: Packages & options
+
+```{r, include=FALSE}
+# this option assigns more RAM for java to enable high-RAM-comsuming processing
+# especially in writing large dataset to .xlxs
+rm(list = ls())
+memory.limit(102400)
+options(java.parameters = "-Xmx10000m")
+
+```
+
 if you have problem about 'could not find function', make sure you got all the library first
 ```{r packages, include=FALSE}
 library(BiocManager)
@@ -31,12 +41,6 @@ library(gplots) #for heatmap
 # browseVignettes("DESeq2")
 ```
 
-```{r, include=FALSE}
-# this option assigns more RAM for java to enable high-RAM-comsuming processing
-# especially in writing large dataset to .xlxs
-options(java.parameters = "-Xmx4048m")
-
-```
 
 ## PART2: Data preparation
 
@@ -58,7 +62,7 @@ To do this, we need library `BiomaRt`.
 List available `Mart` by use `listMarts`, then create ensembl objection by using `useMart`.
 Use `listDatasets` with ensembl objection as parameter to get available gene dataset
 
-```{r include=FALSE}
+```{r eval=FALSE, message=FALSE, include=FALSE}
 listMarts()
 ensembl=useMart("ensembl")
 listDatasets(ensembl)
@@ -68,23 +72,30 @@ Create Mart object by using `useDataset` with corresponding `ensemble` and `gene
 `listFilters` would list all the available filters
 
 For more information about `biomaRt`, run **browseVignettes('biomaRt')**
-```{r include=FALSE}
+```{r eval=FALSE, include=FALSE}
 
-mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
+mart <- useEnsembl(biomart = "ensembl", 
+                   dataset = "hsapiens_gene_ensembl",
+                   mirror = 'useast'
+                   )
 listFilters(mart)
 ```
 
 use `getBM` with correct filter and attributes to get corresponding `external gene name` from ` ensemble gene id`
 
 **This procedure could take a long time depending how large your dataset and you network speed**
-```{r echo=TRUE}
+```{r eval=FALSE, include=FALSE}
 G_list_2 <- getBM(filters= "ensembl_gene_id", 
                   attributes= c("ensembl_gene_id", 'external_gene_name'),
                   values=table$Geneid1,
-                  mart= mart)
+                  mart = mart,
+                  )
 head(G_list_2)
 ```
 
+```{r}
+G_list_2 <- read.xlsx2(file = 'G_list.xlsx', sheetIndex = 1)
+```
 
 
 ## rebuild dataset
@@ -341,9 +352,9 @@ proteomics$GENE.ID <- sapply(proteomics$GENE.ID, sub, pattern = '_HUMAN', replac
 # 
 intersc <- intersect(proteomics$GENE.ID, count_10h$ID)
 x <- count_10h[count_10h$ID %in% intersc, ] %>% 
-  select(ID,CFASN_TM_1:CFASN_TM_3)
+  dplyr::select(ID,CFASN_TM_1:CFASN_TM_3)
 y <- proteomics[proteomics$GENE.ID %in% intersc,] %>% 
-  select(GENE.ID,CFASN_1:CFASN_3)
+  dplyr::select(GENE.ID,CFASN_1:CFASN_3)
 
 ```
 
@@ -461,9 +472,9 @@ gene_intsc.table <- read.xlsx2(file = 'heatmap CF upregulated.xlsx', sheetIndex 
 
 lfc_ts_expr.tibble <- tibble(gene_name = rownames(res_1h),
       lfc.1h = res_1h$log2FoldChange,
-      lfc.2h = res_1h$log2FoldChange,
-      lfc.4h = res_1h$log2FoldChange,
-      lfc.6h =res_1h$log2FoldChange)
+      lfc.2h = res_2h$log2FoldChange,
+      lfc.4h = res_4h$log2FoldChange,
+      lfc.6h =res_6h$log2FoldChange)
 
 #filter genes and create matrix with column names
 gene_intsc_heatmap.tibble <- lfc_ts_expr.tibble %>%

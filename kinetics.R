@@ -198,11 +198,10 @@ res_subgroup <- function(res, alpha=0.1, reg_LFC=1, reg_dir='all'){
 
 
 #get all 4 upregluated genes
-res_list <- list(res_1h,res_2h,res_4h,res_6h)
+res_list <- list(res_1h = res_1h, res_2h = res_2h, res_4h = res_4h, res_6h = res_6h)
 res_list_up <- lapply(res_list, res_subgroup, reg_dir ='up')
 #get all 4 downregluated genes
 res_list_down <- lapply(res_list, res_subgroup, reg_dir ='down')
-
 
 
 
@@ -239,7 +238,7 @@ length(res[(res$log2FoldChange < -1)  & res_sig_pos ,]$baseMean)
 
 # get the name of downregulated genes
 # following demo for 1h
-write(file ='gene-downregulated_new.txt',x = row.names(res_list_down[[1]]))
+write(file ='F:\\repos\\Kinetics\\output\\gene-downregulated_new.txt',x = row.names(res_list_down[[1]]))
 
 
 #search for a gene whether in down or up regulation
@@ -254,14 +253,16 @@ plotCounts(dds, gene=which.min(res$padj), intgroup="condition")
 
 #transform the data into tibble
 #do intersection over all time points with up-regulation
-tibble.1h_up <- as_tibble(as.data.frame(res_list_up[[1]]), rownames = 'genes')
-tibble.2h_up <- as_tibble(as.data.frame(res_list_up[[2]]), rownames = 'genes')
-tibble.4h_up <- as_tibble(as.data.frame(res_list_up[[3]]), rownames = 'genes')
-tibble.6h_up <- as_tibble(as.data.frame(res_list_up[[4]]), rownames = 'genes')
+tibble.1h_up <- as_tibble(as.data.frame(res_list_up[['res_1h']]), rownames = 'genes')
+tibble.2h_up <- as_tibble(as.data.frame(res_list_up[['res_2h']]), rownames = 'genes')
+tibble.4h_up <- as_tibble(as.data.frame(res_list_up[['res_4h']]), rownames = 'genes')
+tibble.6h_up <- as_tibble(as.data.frame(res_list_up[['res_6h']]), rownames = 'genes')
 genes_up_intersection <- dplyr::intersect(tibble.1h_up$genes, tibble.2h_up$genes) %>%
   dplyr::intersect(tibble.4h_up$genes) %>%
   dplyr::intersect(tibble.6h_up$genes)
 length(genes_up_intersection)
+
+
 
 genes_up_intersection.table <- table_nodup[table_nodup$Geneid %in% genes_up_intersection,]
 write.xlsx2(genes_intersection.table, 'genes_up_all_time_points_intersection.xlsx')
@@ -353,10 +354,10 @@ genes_downreg_4h <- tibble.4h_down[(tibble.4h_down$genes %in% genes_down_interse
   arrange(desc(log2FoldChange))
 genes_downreg_6h <- tibble.6h_down[(tibble.6h_down$genes %in% genes_down_intersection), ] %>%
   arrange(desc(log2FoldChange))
-write.xlsx2(genes_downreg_1h, 'genes_downreg_1h.xlsx')
-write.xlsx2(genes_downreg_2h, 'genes_downreg_2h.xlsx')
-write.xlsx2(genes_downreg_4h, 'genes_downreg_4h.xlsx')
-write.xlsx2(genes_downreg_6h, 'genes_downreg_6h.xlsx')
+write.xlsx2(genes_downreg_1h, 'F:\\repos\\Kinetics\\output\\genes_downreg_1h.xlsx')
+write.xlsx2(genes_downreg_2h, 'F:\\repos\\Kinetics\\output\\genes_downreg_2h.xlsx')
+write.xlsx2(genes_downreg_4h, 'F:\\repos\\Kinetics\\output\\genes_downreg_4h.xlsx')
+write.xlsx2(genes_downreg_6h, 'F:\\repos\\Kinetics\\output\\genes_downreg_6h.xlsx')
 
 genes_upreg_1h <- tibble.1h_up[(tibble.1h_up$genes %in% genes_up_intersection), ] %>%
   arrange(desc(log2FoldChange))
@@ -366,10 +367,10 @@ genes_upreg_4h <- tibble.4h_up[(tibble.4h_up$genes %in% genes_up_intersection), 
   arrange(desc(log2FoldChange))
 genes_upreg_6h <- tibble.6h_up[(tibble.6h_up$genes %in% genes_up_intersection), ] %>%
   arrange(desc(log2FoldChange))
-write.xlsx2(genes_upreg_1h, 'genes_upreg_1h.xlsx')
-write.xlsx2(genes_upreg_2h, 'genes_upreg_2h.xlsx')
-write.xlsx2(genes_upreg_4h, 'genes_upreg_4h.xlsx')
-write.xlsx2(genes_upreg_6h, 'genes_upreg_6h.xlsx')
+write.xlsx2(genes_upreg_1h, 'F:\\repos\\Kinetics\\output\\genes_upreg_1h.xlsx')
+write.xlsx2(genes_upreg_2h, 'F:\\repos\\Kinetics\\output\\genes_upreg_2h.xlsx')
+write.xlsx2(genes_upreg_4h, 'F:\\repos\\Kinetics\\output\\genes_upreg_4h.xlsx')
+write.xlsx2(genes_upreg_6h, file = 'F:\\repos\\Kinetics\\output\\genes_upreg_6h.xlsx')
 
 
 
@@ -462,72 +463,72 @@ intersc_up.correlations[intersc_up.correlations$`Pearson P-Value` < 0.05, ] %>%
   write.xlsx2(file = 'proteinomics-transcriptomic-up-pearson-significant.xlsx')
 
 #plot the bubble plot
-par(mfrow = c(2,2))
-data.hallmark.enrich <- read.xlsx2(file = 'Enrichment figures R Chunhui.xlsx',
-                          sheetName = 'Hallmarks',
-                          colClasses = c('character','numeric','character', rep('numeric', 4))
-                          )
-data.hallmark.enrich$FDR.q.value = -log10(as.numeric(data.hallmark.enrich$FDR.q.value))
-data.hallmark.enrich$Gene.Set.Name <- factor(data.hallmark.enrich$Gene.Set.Name,
-                                  levels = data.hallmark.enrich$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
-ggplot(data = data.hallmark.enrich) +
-  geom_point(aes(x = data.hallmark.enrich$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
-  coord_flip() +
-  labs(title = 'Hallmark', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
-  ylab('') +
-  xlab('Genes') +
-  scale_colour_gradient(low = "red", high = "green")
-
-data.comb.enrich <- read.xlsx2(file = 'Enrichment figures R Chunhui.xlsx',
-                                   sheetName = 'Combination',
-                                   colClasses = c('character','numeric','character', rep('numeric', 4))
-)
-data.comb.enrich$FDR.q.value = -log10(as.numeric(data.comb.enrich$FDR.q.value))
-data.comb.enrich$Gene.Set.Name <- factor(data.comb.enrich$Gene.Set.Name,
-                                             levels = data.comb.enrich$Gene.Set.Name[order(data.comb.enrich$X..Genes.in.Overlap..k.)])
-ggplot(data = data.comb.enrich) +
-  geom_point(aes(x = data.comb.enrich$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
-  coord_flip() +
-  labs(title = 'combination', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
-  ylab('') +
-  xlab('Genes') +
-  scale_colour_gradient(low = "red", high = "green")
-
-data.tf.enrich <- read.xlsx2(file = 'Enrichment figures R Chunhui.xlsx',
-                                   sheetName = 'TF',
-                                   colClasses = c('character','numeric','character', rep('numeric', 4))
-)
-data.tf.enrich$Gene.Set.Name <- paste('                               ', data.tf.enrich$Gene.Set.Name)
-data.tf.enrich$FDR.q.value = -log10(as.numeric(data.tf.enrich$FDR.q.value))
-data.tf.enrich$Gene.Set.Name <- factor(data.tf.enrich$Gene.Set.Name,
-                                             levels = data.tf.enrich$Gene.Set.Name[order(data.tf.enrich$X..Genes.in.Overlap..k.)])
-ggplot(data = data.tf.enrich) +
-  geom_point(aes(x = data.tf.enrich$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
-  coord_flip() +
-  labs(title = 'TF', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
-  ylab('') +
-  xlab('Genes') +
-  scale_colour_gradient(low = "red", high = "green") +
-  scale_size(breaks = c(50, 100, 150, 200, 250)) +
-  theme(legend.position = "right")
-
-# plot heatmap
-gene_intsc.table <- read.xlsx2(file = 'heatmap CF upregulated.xlsx', sheetIndex = 1,
-                               stringsAsFactors = F, header = F)
-
-lfc_ts_expr.tibble <- tibble(gene_name = rownames(res_1h),
-      lfc.1h = res_1h$log2FoldChange,
-      lfc.2h = res_1h$log2FoldChange,
-      lfc.4h = res_1h$log2FoldChange,
-      lfc.6h =res_1h$log2FoldChange)
-
-gene_intsc_heatmap.tibble <- lfc_ts_expr.tibble %>%
-  dplyr::filter(gene_name %in% gene_intsc.table[,1])
-gene_intsc_heatmap.matrix <- as.matrix(gene_intsc_heatmap.tibble[,2:5])
-rownames(gene_intsc_heatmap.matrix) <- as.vector(as.list((gene_intsc_heatmap.tibble[,1]))[[1]])
-
-pheatmap(gene_intsc_heatmap.matrix, cluster_cols = F)
-heatmap.2(gene_intsc_heatmap.matrix, Colv = FALSE)
+# par(mfrow = c(2,2))
+# data.hallmark.enrich <- read.xlsx2(file = 'Enrichment figures R Chunhui.xlsx',
+#                           sheetName = 'Hallmarks',
+#                           colClasses = c('character','numeric','character', rep('numeric', 4))
+#                           )
+# data.hallmark.enrich$FDR.q.value = -log10(as.numeric(data.hallmark.enrich$FDR.q.value))
+# data.hallmark.enrich$Gene.Set.Name <- factor(data.hallmark.enrich$Gene.Set.Name,
+#                                   levels = data.hallmark.enrich$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
+# ggplot(data = data.hallmark.enrich) +
+#   geom_point(aes(x = data.hallmark.enrich$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
+#   coord_flip() +
+#   labs(title = 'Hallmark', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
+#   ylab('') +
+#   xlab('Genes') +
+#   scale_colour_gradient(low = "red", high = "green")
+#
+# data.comb.enrich <- read.xlsx2(file = 'Enrichment figures R Chunhui.xlsx',
+#                                    sheetName = 'Combination',
+#                                    colClasses = c('character','numeric','character', rep('numeric', 4))
+# )
+# data.comb.enrich$FDR.q.value = -log10(as.numeric(data.comb.enrich$FDR.q.value))
+# data.comb.enrich$Gene.Set.Name <- factor(data.comb.enrich$Gene.Set.Name,
+#                                              levels = data.comb.enrich$Gene.Set.Name[order(data.comb.enrich$X..Genes.in.Overlap..k.)])
+# ggplot(data = data.comb.enrich) +
+#   geom_point(aes(x = data.comb.enrich$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
+#   coord_flip() +
+#   labs(title = 'combination', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
+#   ylab('') +
+#   xlab('Genes') +
+#   scale_colour_gradient(low = "red", high = "green")
+#
+# data.tf.enrich <- read.xlsx2(file = 'Enrichment figures R Chunhui.xlsx',
+#                                    sheetName = 'TF',
+#                                    colClasses = c('character','numeric','character', rep('numeric', 4))
+# )
+# data.tf.enrich$Gene.Set.Name <- paste('                               ', data.tf.enrich$Gene.Set.Name)
+# data.tf.enrich$FDR.q.value = -log10(as.numeric(data.tf.enrich$FDR.q.value))
+# data.tf.enrich$Gene.Set.Name <- factor(data.tf.enrich$Gene.Set.Name,
+#                                              levels = data.tf.enrich$Gene.Set.Name[order(data.tf.enrich$X..Genes.in.Overlap..k.)])
+# ggplot(data = data.tf.enrich) +
+#   geom_point(aes(x = data.tf.enrich$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
+#   coord_flip() +
+#   labs(title = 'TF', size = '# of Genes in Overlap (k)', color = 'FDR q value') +
+#   ylab('') +
+#   xlab('Genes') +
+#   scale_colour_gradient(low = "red", high = "green") +
+#   scale_size(breaks = c(50, 100, 150, 200, 250)) +
+#   theme(legend.position = "right")
+#
+# # plot heatmap
+# gene_intsc.table <- read.xlsx2(file = 'heatmap CF upregulated.xlsx', sheetIndex = 1,
+#                                stringsAsFactors = F, header = F)
+#
+# lfc_ts_expr.tibble <- tibble(gene_name = rownames(res_1h),
+#       lfc.1h = res_1h$log2FoldChange,
+#       lfc.2h = res_2h$log2FoldChange,
+#       lfc.4h = res_4h$log2FoldChange,
+#       lfc.6h =res_6h$log2FoldChange)
+#
+# gene_intsc_heatmap.tibble <- lfc_ts_expr.tibble %>%
+#   dplyr::filter(gene_name %in% gene_intsc.table[,1])
+# gene_intsc_heatmap.matrix <- as.matrix(gene_intsc_heatmap.tibble[,2:5])
+# rownames(gene_intsc_heatmap.matrix) <- as.vector(as.list((gene_intsc_heatmap.tibble[,1]))[[1]])
+#
+# pheatmap(gene_intsc_heatmap.matrix, cluster_cols = F)
+# heatmap.2(gene_intsc_heatmap.matrix, Colv = FALSE)
 
 
 
@@ -568,9 +569,6 @@ ggplot(data = biological_process.table) +
 
 
 
-
-
-
 cell_component.table <- read.xlsx2(file = 'Bubbleplots Chunhui Top100 Up.xlsx',
                                        sheetName = 'Cel componet',
                                        colClasses = c('character','numeric','character', rep('numeric', 4))
@@ -591,10 +589,6 @@ ggplot(data = cell_component.table) +
     color = guide_colorbar(order = 0),
     fill = guide_legend(order = 1)
   )
-
-
-
-
 
 
 
@@ -752,3 +746,5 @@ ggplot(data = p2_TFT.table) +
     color = guide_colorbar(order = 0),
     fill = guide_legend(order = 1)
   )
+
+

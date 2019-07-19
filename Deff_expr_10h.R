@@ -24,9 +24,9 @@ gene_expr_10h.tibble <- as_tibble(gene_expr_10h.table)
 all(!duplicated(gene_expr_10h.tibble[,1]))
 
 
-#use the geneid as row.names 
+#use the geneid as row.names
 gene_10h.table_rownames <- data.frame(gene_expr_10h.tibble[,-1], row.names=gene_expr_10h.table[,1])
-gene_10h.count_maxtrix <- as.matrix(table_rownames)
+gene_10h.count_maxtrix <- as.matrix(gene_10h.table_rownames)
 gene_10h.count_maxtrix <- round(gene_10h.count_maxtrix)
 # make the mode of matrix integer otherwise it will be number
 head(gene_10h.count_maxtrix)
@@ -44,7 +44,7 @@ gene_10h.dds <- DESeqDataSetFromMatrix(countData = gene_10h.count_maxtrix[,1:14]
                               design = ~ condition)
 
 # pre-filtering
-# by removing rows in which there are very few reads, we reduce the memory size of the dds data object, 
+# by removing rows in which there are very few reads, we reduce the memory size of the dds data object,
 #   and we increase the speed of the transformation and testing functions within DESeq2
 keep <- rowSums(counts(gene_10h.dds)) >= 10
 gene_10h.dds <- gene_10h.dds[keep,]
@@ -52,7 +52,7 @@ gene_10h.dds <- gene_10h.dds[keep,]
 # set dds condition with all time points
 # set 'blood' as base level, the default base level is determined by alphabet order
 # other statement if also available for this purpose
-# Caution!: the document only give example for factor with two levels, not sure about accuracy for 
+# Caution!: the document only give example for factor with two levels, not sure about accuracy for
 #   factor with more than 2 levels
 gene_10h.dds$condition <- factor(gene_10h.dds$condition, levels = c("blood","LTB4_TM",'CFASN_TM'))
 # drop levels that with no sample
@@ -72,12 +72,12 @@ res_CFASN <- results(gene_10h.dds, contrast=c("condition","CFASN_TM", "blood"))
 # this function is used to subset the neeeded gene from RESULT object
 #function get those LFC greate than 1 and the adjusted P-value is less than 0.1
 res_subgroup <- function(res, alpha=0.1, reg_LFC=1, reg_dir='all'){
-  
-  # res is an obj from DEseq2.result function 
+
+  # res is an obj from DEseq2.result function
   # alpha gives the significant level for adjusted P-value
   # reg gives the regulation level change in log2 fold change in absolute value
   # reg_dir gives which regulation direction you want to subset you gene
-  # three options: all -- up and down 
+  # three options: all -- up and down
   #                up  -- only up regulated
   #                down -- only down regulated
   res_sig_pos <- (res$padj < alpha)
@@ -91,21 +91,21 @@ res_subgroup <- function(res, alpha=0.1, reg_LFC=1, reg_dir='all'){
   else if(reg_dir == 'down'){
     res_LFC_pos <- (res$log2FoldChange < -reg_LFC)
   }
-  
+
   return(res[res_LFC_pos & res_sig_pos,])
-  
+
 }
 
 
 # this function is used to subset the neeeded gene from RESULT object
 #function get those LFC greate than 1 and the adjusted P-value is less than 0.1
 res_subgroup <- function(res, alpha=0.1, reg_LFC=1, reg_dir='all'){
-  
-  # res is an obj from DEseq2.result function 
+
+  # res is an obj from DEseq2.result function
   # alpha gives the significant level for adjusted P-value
   # reg gives the regulation level change in log2 fold change in absolute value
   # reg_dir gives which regulation direction you want to subset you gene
-  # three options: all -- up and down 
+  # three options: all -- up and down
   #                up  -- only up regulated
   #                down -- only down regulated
   res_sig_pos <- (res$padj < alpha)
@@ -119,9 +119,9 @@ res_subgroup <- function(res, alpha=0.1, reg_LFC=1, reg_dir='all'){
   else if(reg_dir == 'down'){
     res_LFC_pos <- (res$log2FoldChange < -reg_LFC)
   }
-  
+
   return(res[res_LFC_pos & res_sig_pos,])
-  
+
 }
 
 #upregulated
@@ -216,7 +216,7 @@ res_CFASN_down.unique <- sqldf::sqldf('
 res_LTB4_up.unique <- res_LTB4_up.unique[,1:7] %>% select(gene_name, everything())
 res_CFASN_up.unique <- res_CFASN_up.unique[,1:7] %>% select(gene_name, everything())
 
-#down 
+#down
 res_LTB4_down.unique <- res_LTB4_down.unique[,1:7] %>% select(gene_name, everything())
 res_CFASN_down.unique <- res_CFASN_down.unique[,1:7] %>% select(gene_name, everything())
 
@@ -231,7 +231,29 @@ write.xlsx2(res_CFASN_down.unique,file = 'res_CFASN_down_unique.xlsx')
 
 
 # check unique
-all(!res_LTB4_up.unique$gene_name %in% res_CFASN_up.unique$gene_name)
-all(!res_LTB4_down.unique$gene_name %in% res_CFASN_down.unique$gene_name)
+all(!(res_LTB4_up.unique$gene_name %in% res_CFASN_up.unique$gene_name))
+all(!(res_LTB4_down.unique$gene_name %in% res_CFASN_down.unique$gene_name))
+
+# unique 10h up-regulated with other 4 time points CFASN
+length(res_CFASN_up.unique$gene_name)
+intersc_unique_10_CFASN_up_four_timepoints <- res_CFASN_up.unique[res_CFASN_up.unique$gene_name %in% genes_up_intersection,]
+length(intersc_unique_10_CFASN_up_four_timepoints$gene_name)
+
+#make a table with the lfc of 5 time points of up-regulated CFASN
+# intersc_unique_10_CFASN_up_four_timepoints.lfc_ts_expr.tibble <- lfc_ts_expr.tibble %>%
+#   filter(gene_name %in% intersc_unique_10_CFASN_up_four_timepoints$gene_name)
+#
+# intersc_unique_10_CFASN_up_four_timepoints.lfc_ts_expr.tibble <- sqldf::sqldf('
+#   select
+#     "lfc.1h", "lfc.2h", "lfc.4h", "lfc.6h", log2FoldChange as "lfc.10h"
+#     from "intersc_unique_10_CFASN_up_four_timepoints.lfc_ts_expr.tibble", "res_CFASN_up.unique"
+#     where "intersc_unique_10_CFASN_up_four_timepoints.lfc_ts_expr.tibble".gene_name = "res_CFASN_up.unique".gene_name
+# ')
+#
+#
+# write.table(intersc_unique_10_CFASN_up_four_timepoints.lfc_ts_expr.tibble, file = 'intersc_unique_10_CFASN_up_four_timepoints.tsv',
+#             quote = F, sep = '\t', row.names = F)
+
+intersc_unique_10_CFASN_up_four_timepoints
 
 
