@@ -238,6 +238,7 @@ all(!(res_LTB4_down.unique$gene_name %in% res_CFASN_down.unique$gene_name))
 length(res_CFASN_up.unique$gene_name)
 intersc_unique_10_CFASN_up_four_timepoints <- res_CFASN_up.unique[res_CFASN_up.unique$gene_name %in% genes_up_intersection,]
 length(intersc_unique_10_CFASN_up_four_timepoints$gene_name)
+write.xlsx2(intersc_unique_10_CFASN_up_four_timepoints, 'intersc_unique_10_CFASN_up_four_timepoints.xlsx')
 
 #make a table with the lfc of 5 time points of up-regulated CFASN
 # intersc_unique_10_CFASN_up_four_timepoints.lfc_ts_expr.tibble <- lfc_ts_expr.tibble %>%
