@@ -540,15 +540,17 @@ intersc_up.correlations[intersc_up.correlations$`Pearson P-Value` < 0.05, ] %>%
 
 
 #plot the bubble plot for top 100 genes
+#
 biological_process.table <- read.xlsx2(file = 'Bubbleplots Chunhui Top100 Up.xlsx',
                                    sheetName = 'BIological process',
                                    colClasses = c('character','numeric','character', rep('numeric', 4))
 )
 
 biological_process.table$FDR.q.value = -log10(as.numeric(biological_process.table$FDR.q.value))
-biological_process.table$Gene.Set.Name <- factor(biological_process.table$Gene.Set.Name,
-                                             levels = biological_process.table$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
+#biological_process.table$Gene.Set.Name <- factor(biological_process.table$Gene.Set.Name,
+ #                                            levels = biological_process.table$Gene.Set.Name[order(biological_process.table$X..Genes.in.Overlap..k.)])
 
+# w:530 h:360
 ggplot(data = biological_process.table) +
   geom_point(aes(x = biological_process.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
   coord_flip() +
@@ -562,22 +564,18 @@ ggplot(data = biological_process.table) +
   )
 
 
-
-
-
-
-
-
-
+#*******************************************************************************
 cell_component.table <- read.xlsx2(file = 'Bubbleplots Chunhui Top100 Up.xlsx',
                                        sheetName = 'Cel componet',
                                        colClasses = c('character','numeric','character', rep('numeric', 4))
 )
 
 cell_component.table$FDR.q.value = -log10(as.numeric(cell_component.table$FDR.q.value))
-cell_component.table$Gene.Set.Name <- factor(cell_component.table$Gene.Set.Name,
-                                                 levels = cell_component.table$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
+#cell_component.table$Gene.Set.Name <- factor(cell_component.table$Gene.Set.Name,
+#                                                 levels = cell_component.table$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
 
+
+# w:560 h:400
 ggplot(data = cell_component.table) +
   geom_point(aes(x = cell_component.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
   coord_flip() +
@@ -598,9 +596,10 @@ molecular_function.table <- read.xlsx2(file = 'Bubbleplots Chunhui Top100 Up.xls
 )
 
 molecular_function.table$FDR.q.value = -log10(as.numeric(molecular_function.table$FDR.q.value))
-molecular_function.table$Gene.Set.Name <- factor(molecular_function.table$Gene.Set.Name,
-                                                 levels = molecular_function.table$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
+#molecular_function.table$Gene.Set.Name <- factor(molecular_function.table$Gene.Set.Name,
+#                                                 levels = molecular_function.table$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
 
+# w:780 h:430
 ggplot(data = molecular_function.table) +
   geom_point(aes(x = molecular_function.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
   coord_flip() +
@@ -613,16 +612,22 @@ ggplot(data = molecular_function.table) +
     fill = guide_legend(order = 1)
   )
 
-# another bubble plot
+
+
+
+
+
+# another bubble plot for pattern
 pattern1.table <- read.xlsx2(file = 'bubble plot patterns.xlsx',
                                        sheetName = 'pattern1',
                                        colClasses = c('character','numeric','character', rep('numeric', 4))
 )
 
 pattern1.table$FDR.q.value = -log10(as.numeric(pattern1.table$FDR.q.value))
-pattern1.table$Gene.Set.Name <- factor(pattern1.table$Gene.Set.Name,
-                                                 levels = pattern1.table$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
+#pattern1.table$Gene.Set.Name <- factor(pattern1.table$Gene.Set.Name,
+#                                                 levels = pattern1.table$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
 
+# w:515, h:440
 ggplot(data = pattern1.table) +
   geom_point(aes(x = pattern1.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
   coord_flip() +
@@ -636,15 +641,15 @@ ggplot(data = pattern1.table) +
   )
 
 
-
+# Pattern 2
 pattern2.table <- read.xlsx2(file = 'bubble plot patterns.xlsx',
                              sheetName = 'pattern 2',
                              colClasses = c('character','numeric','character', rep('numeric', 4))
 )
 
 pattern2.table$FDR.q.value = -log10(as.numeric(pattern2.table$FDR.q.value))
-pattern2.table$Gene.Set.Name <- factor(pattern2.table$Gene.Set.Name,
-                                       levels = pattern2.table$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
+#pattern2.table$Gene.Set.Name <- factor(pattern2.table$Gene.Set.Name,
+#                                       levels = pattern2.table$Gene.Set.Name[order(data.hallmark.enrich$X..Genes.in.Overlap..k.)])
 
 ggplot(data = pattern2.table) +
   geom_point(aes(x = pattern2.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
@@ -666,9 +671,11 @@ p1_combination.table <- read.xlsx2(file = 'enrichment share up-regulated genes\\
 )
 
 p1_combination.table$FDR.q.value = -log10(as.numeric(p1_combination.table$FDR.q.value))
-p1_combination.table$Gene.Set.Name <- factor(p1_combination.table$Gene.Set.Name,
-                                       levels = p1_combination.table$Gene.Set.Name[order(p1_combination.table$FDR.q.value)])
+# p1_combination.table$Gene.Set.Name <- factor(p1_combination.table$Gene.Set.Name,
+#                                        levels = p1_combination.table$Gene.Set.Name[order(p1_combination.table$FDR.q.value)])
 
+
+#560 440
 ggplot(data = p1_combination.table) +
   geom_point(aes(x = p1_combination.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
   coord_flip() +
@@ -688,9 +695,10 @@ p1_TFT.table <- read.xlsx2(file = 'enrichment share up-regulated genes\\bubblepl
 )
 
 p1_TFT.table$FDR.q.value = -log10(as.numeric(p1_TFT.table$FDR.q.value))
-p1_TFT.table$Gene.Set.Name <- factor(p1_TFT.table$Gene.Set.Name,
-                                             levels = p1_TFT.table$Gene.Set.Name[order(p1_TFT.table$FDR.q.value)])
+#p1_TFT.table$Gene.Set.Name <- factor(p1_TFT.table$Gene.Set.Name,
+#                                             levels = p1_TFT.table$Gene.Set.Name[order(p1_TFT.table$FDR.q.value)])
 
+#390 450
 ggplot(data = p1_TFT.table) +
   geom_point(aes(x = as.factor(p1_TFT.table$Gene.Set.Name), y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
   coord_flip() +
@@ -710,9 +718,11 @@ p2_combination.table <- read.xlsx2(file = 'enrichment share up-regulated genes\\
 )
 
 p2_combination.table$FDR.q.value = -log10(as.numeric(p2_combination.table$FDR.q.value))
-p2_combination.table$Gene.Set.Name <- factor(p2_combination.table$Gene.Set.Name,
-                                     levels = p2_combination.table$Gene.Set.Name[order(p2_combination.table$FDR.q.value)])
+# p2_combination.table$Gene.Set.Name <- factor(p2_combination.table$Gene.Set.Name,
+#                                      levels = p2_combination.table$Gene.Set.Name[order(p2_combination.table$FDR.q.value)])
 
+
+# 670 440
 ggplot(data = p2_combination.table) +
   geom_point(aes(x = p2_combination.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
   coord_flip() +
@@ -732,9 +742,11 @@ p2_TFT.table <- read.xlsx2(file = 'enrichment share up-regulated genes\\bubblepl
 )
 
 p2_TFT.table$FDR.q.value = -log10(as.numeric(p2_TFT.table$FDR.q.value))
-p2_TFT.table$Gene.Set.Name <- factor(p2_TFT.table$Gene.Set.Name,
-                                     levels = p2_TFT.table$Gene.Set.Name[order(p2_TFT.table$FDR.q.value)])
+#p2_TFT.table$Gene.Set.Name <- factor(p2_TFT.table$Gene.Set.Name,
+#                                     levels = p2_TFT.table$Gene.Set.Name[order(p2_TFT.table$FDR.q.value)])
 
+
+#430 440
 ggplot(data = p2_TFT.table) +
   geom_point(aes(x =  p2_TFT.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
   coord_flip() +
@@ -748,15 +760,16 @@ ggplot(data = p2_TFT.table) +
   )
 
 # 5-points combination
-five_points_combination.table.table <- read.xlsx2(file = 'enrichment intersection 5 time points genes\\bubbleplot five points.xlsx',
+five_points_combination.table <- read.xlsx2(file = 'enrichment intersection 5 time points genes\\bubbleplot five points.xlsx',
                            sheetName = 'Combination',
                            colClasses = c('character','numeric','character', rep('numeric', 4))
 )
 
 five_points_combination.table$FDR.q.value = -log10(as.numeric(five_points_combination.table$FDR.q.value))
-five_points_combination.table$Gene.Set.Name <- factor(five_points_combination.table$Gene.Set.Name,
-                                     levels = five_points_combination.table$Gene.Set.Name[order(five_points_combination.table$FDR.q.value)])
+#five_points_combination.table$Gene.Set.Name <- factor(five_points_combination.table$Gene.Set.Name,
+#                                     levels = five_points_combination.table$Gene.Set.Name[order(five_points_combination.table$FDR.q.value)])
 
+#830 440
 ggplot(data = five_points_combination.table) +
   geom_point(aes(x =  five_points_combination.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
   coord_flip() +
@@ -780,6 +793,7 @@ five_points_TFT.table$FDR.q.value = -log10(as.numeric(five_points_TFT.table$FDR.
 five_points_TFT.table$Gene.Set.Name <- factor(five_points_TFT.table$Gene.Set.Name,
                                                       levels = five_points_TFT.table$Gene.Set.Name[order(five_points_TFT.table$FDR.q.value)])
 
+#420 440
 ggplot(data = five_points_TFT.table) +
   geom_point(aes(x =  five_points_TFT.table$Gene.Set.Name, y='', size =  X..Genes.in.Overlap..k., color = FDR.q.value)) +
   coord_flip() +
@@ -792,3 +806,29 @@ ggplot(data = five_points_TFT.table) +
     fill = guide_legend(order = 1)
   )
 
+
+
+
+
+
+
+# get the 5 time points genes for time series
+genes_five_times_points.ts <- table_nodup[table_nodup$Geneid %in% intersc_unique_10_CFASN_up_four_timepoints$gene_name,] %>%
+  rowwise %>%
+  mutate(Blood = mean(c(HD1_Blood, HD2_Blood, HD6_Blood)),
+                       '1 hour' = mean(c(HD1_1H, HD2_1H, HD6_1H)),
+                       '2 hours' =  mean(c(HD1_2H, HD2_2H, HD6_2H)),
+                       '4 hours' =  mean(c(HD1_4H, HD2_4H, HD6_4H)),
+                       '6 hours' =  mean(c(HD1_6H, HD2_6H, HD6_6H))) %>%
+  select(Geneid, 'Blood','1 hour', '2 hours', '4 hours', '6 hours')
+
+gene_expr_10h.10h_mean <- gene_expr_10h.table[gene_expr_10h.table$ID %in% intersc_unique_10_CFASN_up_four_timepoints$gene_name,] %>%
+  rowwise %>%
+  mutate('10 hours' = mean(c(CFASN_TM_1, CFASN_TM_2, CFASN_TM_3,CFASN_TM_5, CFASN_TM_6))) %>%
+  select(ID, '10 hours')
+
+five_time_points.ts <- dplyr::inner_join(x = genes_five_times_points.ts, y = gene_expr_10h.10h_mean,
+                  by = c('Geneid' = 'ID'))
+
+# export file for time series
+write.table(five_time_points.ts, file = 'enrichment intersection 5 time points genes\\five_time_points.tsv', sep = '\t', quote = F, col.names = T, row.names = F)
