@@ -1,3 +1,8 @@
+#this option assigns more RAM for java to enable high-RAM-comsuming processing
+# especially in writing large dataset to .xlxs
+options(java.parameters = "-Xmx4048m")
+
+
 # # install necessary package
 library(BiocManager)
 # if you have install DESeq2, uncomment the followiing line
@@ -12,9 +17,6 @@ library("pheatmap")
 # run next line if you need to get some help from DESeq2
 # browseVignettes("DESeq2")
 
-#this option assigns more RAM for java to enable high-RAM-comsuming processing
-# especially in writing large dataset to .xlxs
-options(java.parameters = "-Xmx4048m")
 
 
 # read in the dataset
@@ -227,11 +229,12 @@ for(i in 1:4){
 
 # plot the MAplot with the subset result
 plotMA(res_list_up[[1]], ylim=c(-3,3))
+plotMA(res_list[[1]], ylim=c(-3,3))
 
-# get the length of the dataset of interest
-# following two lines is demo
-length(res[(res$log2FoldChange > 1)  & res_sig_pos ,]$baseMean)
-length(res[(res$log2FoldChange < -1)  & res_sig_pos ,]$baseMean)
+# # get the length of the dataset of interest
+# # following two lines is demo
+# length(res[(res$log2FoldChange > 1)  & res_sig_pos ,]$baseMean)
+# length(res[(res$log2FoldChange < -1)  & res_sig_pos ,]$baseMean)
 
 
 
@@ -249,7 +252,9 @@ which(row.names(res) == 'ENSG00000102794')
 
 
 #plot counts of reads for single gene across groups
-plotCounts(dds, gene=which.min(res$padj), intgroup="condition")
+plotCounts(dds, gene=which.min(res_list[[1]]$padj), intgroup="condition")
+
+
 
 #transform the data into tibble
 #do intersection over all time points with up-regulation
@@ -313,6 +318,7 @@ length(which(genes_up_intersection %in% overlap_transcriptome_proteomes$X1))
 
 
 
+
 ##################### plot
 
 #make the barchart of 4 time point up-regulated gene number
@@ -358,6 +364,8 @@ write.xlsx2(genes_downreg_1h, 'F:\\repos\\Kinetics\\output\\genes_downreg_1h.xls
 write.xlsx2(genes_downreg_2h, 'F:\\repos\\Kinetics\\output\\genes_downreg_2h.xlsx')
 write.xlsx2(genes_downreg_4h, 'F:\\repos\\Kinetics\\output\\genes_downreg_4h.xlsx')
 write.xlsx2(genes_downreg_6h, 'F:\\repos\\Kinetics\\output\\genes_downreg_6h.xlsx')
+
+
 
 genes_upreg_1h <- tibble.1h_up[(tibble.1h_up$genes %in% genes_up_intersection), ] %>%
   arrange(desc(log2FoldChange))

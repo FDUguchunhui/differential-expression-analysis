@@ -166,7 +166,7 @@ write.xlsx2(res_down_intersection,file = 'res_down_intersection.xlsx')
 
 
 
-
+# take unique
 res_LTB4_up.unique <- sqldf::sqldf('
               select *
               from res_LTB4_up
