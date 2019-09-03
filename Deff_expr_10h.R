@@ -33,13 +33,14 @@ head(gene_10h.count_maxtrix)
 
 gene_10h.coldata <- data.frame(condition = c(rep('blood', 4),
                                     rep('LTB4_TM', 5),
-                                    rep('CFASN_TM', 5)),
-                      row.names = colnames(gene_10h.count_maxtrix[,1:14]))
+                                    rep('CFASN_TM', 5),
+                                    rep('CFASN_inc', 2)),
+                      row.names = colnames(gene_10h.count_maxtrix[,1:16]))
 
-all(rownames(gene_10h.coldata) == colnames(gene_10h.count_maxtrix[1:14]))
+all(rownames(gene_10h.coldata) == colnames(gene_10h.count_maxtrix[1:16]))
 
 #create DESeqDataSet(dds) object, dds is a container for intermediate data
-gene_10h.dds <- DESeqDataSetFromMatrix(countData = gene_10h.count_maxtrix[,1:14],
+gene_10h.dds <- DESeqDataSetFromMatrix(countData = gene_10h.count_maxtrix[,1:16],
                               colData = gene_10h.coldata,
                               design = ~ condition)
 
@@ -54,7 +55,7 @@ gene_10h.dds <- gene_10h.dds[keep,]
 # other statement if also available for this purpose
 # Caution!: the document only give example for factor with two levels, not sure about accuracy for
 #   factor with more than 2 levels
-gene_10h.dds$condition <- factor(gene_10h.dds$condition, levels = c("blood","LTB4_TM",'CFASN_TM'))
+gene_10h.dds$condition <- factor(gene_10h.dds$condition, levels = c("blood","LTB4_TM",'CFASN_TM', 'CFASN_inc'))
 # drop levels that with no sample
 gene_10h.dds$condition <- droplevels(gene_10h.dds$condition)
 
@@ -69,32 +70,8 @@ gene_10h.dds <- DESeq(gene_10h.dds)
 res_LTB4 <- results(gene_10h.dds, contrast=c("condition","LTB4_TM", "blood"))
 res_CFASN <- results(gene_10h.dds, contrast=c("condition","CFASN_TM", "blood"))
 
-# this function is used to subset the neeeded gene from RESULT object
-#function get those LFC greate than 1 and the adjusted P-value is less than 0.1
-res_subgroup <- function(res, alpha=0.1, reg_LFC=1, reg_dir='all'){
-
-  # res is an obj from DEseq2.result function
-  # alpha gives the significant level for adjusted P-value
-  # reg gives the regulation level change in log2 fold change in absolute value
-  # reg_dir gives which regulation direction you want to subset you gene
-  # three options: all -- up and down
-  #                up  -- only up regulated
-  #                down -- only down regulated
-  res_sig_pos <- (res$padj < alpha)
-  res_sig_pos[is.na(res_sig_pos)] <- F
-  if(reg_dir == 'all'){
-    res_LFC_pos <- (res$log2FoldChange > reg_LFC) | (res$log2FoldChange < -reg_LFC)
-  }
-  else if(reg_dir == 'up'){
-    res_LFC_pos <- (res$log2FoldChange > reg_LFC)
-  }
-  else if(reg_dir == 'down'){
-    res_LFC_pos <- (res$log2FoldChange < -reg_LFC)
-  }
-
-  return(res[res_LFC_pos & res_sig_pos,])
-
-}
+# comparison within inc and blood
+res_inc <- results(gene_10h.dds, contrast=c("condition","CFASN_inc", "blood"))
 
 
 # this function is used to subset the neeeded gene from RESULT object
@@ -129,20 +106,24 @@ res_LTB4_up <- as.data.frame(res_subgroup(res_LTB4, reg_dir = 'up'))
 res_LTB4_up$gene_name <- row.names(res_LTB4_up)
 res_CFASN_up <- as.data.frame(res_subgroup(res_CFASN, reg_dir = 'up'))
 res_CFASN_up$gene_name <- row.names(res_CFASN_up)
+res_inc_up <- as.data.frame(res_subgroup(res_inc, reg_dir = 'up'))
+res_inc_up$gene_name <- row.names(res_inc_up)
 
 #down regulated
 res_LTB4_down <- as.data.frame(res_subgroup(res_LTB4, reg_dir = 'down'))
 res_LTB4_down$gene_name <- row.names(res_LTB4_down)
 res_CFASN_down <- as.data.frame(res_subgroup(res_CFASN, reg_dir = 'down'))
 res_CFASN_down$gene_name <- row.names(res_CFASN_down)
-
+res_inc_down <- as.data.frame(res_subgroup(res_inc, reg_dir = 'down'))
+res_inc_down$gene_name <- row.names(res_inc_down)
 
 #write significant up & down regulated genes
 write.xlsx2(res_LTB4_up,file = 'res_LTB4_up.xlsx')
 write.xlsx2(res_CFASN_up, file = 'res_CFASN_up.xlsx')
 write.xlsx2(res_LTB4_down,file = 'res_LTB4_down.xlsx')
 write.xlsx2(res_CFASN_down, file = 'res_CFASN_down.xlsx')
-
+write.xlsx2(res_inc_up, file = 'output/res_inc_up.xlsx')
+write.xlsx2(res_inc_down, file = 'output/res_inc_down.xlsx')
 
 # intersection for up and down
 res_up_intersection <- sqldf::sqldf('

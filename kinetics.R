@@ -5,7 +5,7 @@ options(java.parameters = "-Xmx4048m")
 
 # # install necessary package
 library(BiocManager)
-# if you have install DESeq2, uncomment the followiing line
+# if you have install DESeq2, uncomment the following line
 # BiocManager::install("DESeq2")
 library(DESeq2)
 library(tidyverse)
@@ -53,10 +53,12 @@ table_reordered <- table_merge %>%
   as_tibble() %>%
   dplyr::select(Geneid1, external_gene_name, everything())
 table_reordered <- table_reordered[, c(-3, -19)]
+
+# use the external_gene_name if exists, otherwise use ensemble_gene_id
 table_reordered$external_gene_name <-
   ifelse(is.na(table_reordered$external_gene_name),table_reordered$Geneid1,
          table_reordered$external_gene_name)
-
+# drop the Geneid1(the ensemble_id) column
 table_geneid <- table_reordered[,-1]
 colnames(table_geneid)[1] = 'Geneid'
 # omit any row if has missing value
@@ -64,7 +66,7 @@ colnames(table_geneid)[1] = 'Geneid'
 head(table_geneid)
 
 
-#remove depublicate by geneid using sqlite
+#remove depublicate by geneid using SQLite
 # base rule: average the read from the same gene
 # caution! This may not applicable for bio-duplicate
 table_nodup <-  sqldf::sqldf('
@@ -84,7 +86,7 @@ table_nodup <-  sqldf::sqldf('
 #check how many gene left in the processed dataset
 length(table_nodup$Geneid)
 
-#check whether there is duplicate now, if there is no duplicate, a True should be returen
+#check whether there is duplicate now, if there is no duplicate, a True should be returned
 all(!duplicated(table_nodup[,1]))
 #check the first 5 rows
 head(table_nodup)
@@ -94,7 +96,8 @@ head(table_nodup)
 
 #make the matrix needed for next step
 
-#use the geneid as row.names
+#use the geneid as row.names 
+# caution! must be unique to use as row.names(primary key)
 table_rownames <- data.frame(table_nodup[,-1], row.names=table_nodup[,1])
 count_maxtrix <- as.matrix(table_rownames)
 # make the mode of matrix integer otherwise it will be number
@@ -840,3 +843,6 @@ five_time_points.ts <- dplyr::inner_join(x = genes_five_times_points.ts, y = gen
 
 # export file for time series
 write.table(five_time_points.ts, file = 'enrichment intersection 5 time points genes\\five_time_points.tsv', sep = '\t', quote = F, col.names = T, row.names = F)
+
+
+
