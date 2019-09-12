@@ -844,5 +844,6 @@ five_time_points.ts <- dplyr::inner_join(x = genes_five_times_points.ts, y = gen
 # export file for time series
 write.table(five_time_points.ts, file = 'enrichment intersection 5 time points genes\\five_time_points.tsv', sep = '\t', quote = F, col.names = T, row.names = F)
 
+#plot
 
 
