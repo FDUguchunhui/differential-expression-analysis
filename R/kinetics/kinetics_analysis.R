@@ -164,6 +164,15 @@ set_124 <- setdiff(intsc_124_up, res_list_up_sig[['res_6h']]$gene_id)
   set_246 <- setdiff(intsc_246_up, res_list_up_sig[['res_1h']]$gene_id)
 }
 
+# 12 
+{
+  intsc_12_up <- Reduce(f = intersect, lapply(res_list_up_sig[c('res_2h', 'res_4h', 'res_6h')], `[[`, 'gene_id'))
+  length(intsc_12_up)
+  set_12 <- setdiff(intsc_12_up, union(res_list_up_sig[['res_4h']]$gene_id, 
+                                        res_list_up_sig[['res_6h']]$gene_id))
+}
+
+
 
 
 
@@ -219,3 +228,4 @@ write.xlsx(all[[4]],  sheetName = '146',
            file = 'output/dontknowhowtoname.xlsx', append = T)
 write.xlsx(all[[5]],  sheetName = '246', 
            file = 'output/dontknowhowtoname.xlsx', append = T)
+
