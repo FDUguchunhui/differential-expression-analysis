@@ -17,7 +17,7 @@ memory.limit(102400)
 options(java.parameters = "-Xmx6048m")
 
 
-gene_expr_10h.table <- read.xlsx2('10hr_normed_counts.xlsx', sheetName = 'counts', stringsAsFactors = F,
+gene_expr_10h.table <- read.xlsx2('data/10hr_normed_counts.xlsx', sheetName = 'counts', stringsAsFactors = F,
                                   colClasses = c('character', rep('numeric', 16)))
 gene_expr_10h.tibble <- as_tibble(gene_expr_10h.table)
 #Check all unique
