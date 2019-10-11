@@ -229,3 +229,41 @@ write.xlsx(all[[4]],  sheetName = '146',
 write.xlsx(all[[5]],  sheetName = '246', 
            file = 'output/dontknowhowtoname.xlsx', append = T)
 
+#---------------------------------------------------------------------------------------
+
+
+
+upreg <- read.xlsx(file = 'data/venn_result Upregulated.xlsx', sheetIndex = 1, stringsAsFactors = F)
+upreg <- upreg %>% as_tibble() %>% fill(`Names`, .direction = c("down"))  
+combo_up <- levels(factor(upreg$Names, levels = unique(upreg$Names)))
+
+up_comb <- list()
+for(i in 1:length(combo_up)){
+  up_comb[[i]] <- res_all[res_all$gene_id %in% upreg[upreg$Names == combo_up[i],]$elements,]
+}
+
+
+# 
+for(i in 1:length(combo_up)){
+  write.xlsx(up_comb[[i]],  sheetName = sub('Hours', '', combo_up)[[i]],  # the sheetname is short
+             file = 'output/up_comb.xlsx', append = T)
+}
+
+
+# for down reg
+
+downreg <- read.xlsx(file = 'data/Venn_Downregulated.xlsx', sheetIndex = 1, stringsAsFactors = F)
+downreg <- downreg %>% as_tibble() %>% fill(`Names`, .direction = c("down"))  
+combo_down <- levels(factor(downreg$Names, levels = unique(downreg$Names)))
+
+down_comb <- list()
+for(i in 1:length(combo_down)){
+  down_comb[[i]] <- res_all[res_all$gene_id %in% downreg[downreg$Names == combo_down[i],]$elements,]
+}
+
+
+# 
+for(i in 1:length(combo_down)){
+  write.xlsx(down_comb[[i]],  sheetName = gsub('hour[s]*', '', combo_down)[[i]],  # the sheetname is short
+             file = 'output/down_comb.xlsx', append = T)
+}
