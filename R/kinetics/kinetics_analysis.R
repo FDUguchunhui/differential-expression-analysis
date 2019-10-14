@@ -344,6 +344,7 @@ colnames(res_all) <- c('gene_id', '1h', '2h', '4h', '6h')
 
 
 
+<<<<<<< HEAD
 all <- list(res_all[res_all$gene_id %in% intsc_1246_up, ],
             res_all[res_all$gene_id %in% set_124, ],
             res_all[res_all$gene_id %in% set_126, ],
@@ -368,3 +369,61 @@ write.xlsx(all[[5]],
            sheetName = '246',
            file = 'output/dontknowhowtoname.xlsx',
            append = T)
+=======
+all <- list(res_all[res_all$gene_id %in% intsc_1246_up,],
+res_all[res_all$gene_id %in% set_124,],
+res_all[res_all$gene_id %in% set_126,],
+res_all[res_all$gene_id %in% set_146,],
+res_all[res_all$gene_id %in% set_246,]
+)
+
+write.xlsx(all[[1]],  sheetName = 'intsc_1246_up', 
+                  file = 'output/dontknowhowtoname.xlsx')
+write.xlsx(all[[2]],  sheetName = '124', 
+           file = 'output/dontknowhowtoname.xlsx', append = T)
+write.xlsx(all[[3]],  sheetName = '126', 
+           file = 'output/dontknowhowtoname.xlsx', append = T)
+write.xlsx(all[[4]],  sheetName = '146', 
+           file = 'output/dontknowhowtoname.xlsx', append = T)
+write.xlsx(all[[5]],  sheetName = '246', 
+           file = 'output/dontknowhowtoname.xlsx', append = T)
+
+#---------------------------------------------------------------------------------------
+
+
+
+upreg <- read.xlsx(file = 'data/venn_result Upregulated.xlsx', sheetIndex = 1, stringsAsFactors = F)
+upreg <- upreg %>% as_tibble() %>% fill(`Names`, .direction = c("down"))  
+combo_up <- levels(factor(upreg$Names, levels = unique(upreg$Names)))
+
+up_comb <- list()
+for(i in 1:length(combo_up)){
+  up_comb[[i]] <- res_all[res_all$gene_id %in% upreg[upreg$Names == combo_up[i],]$elements,]
+}
+
+
+# 
+for(i in 1:length(combo_up)){
+  write.xlsx(up_comb[[i]],  sheetName = sub('Hours', '', combo_up)[[i]],  # the sheetname is short
+             file = 'output/up_comb.xlsx', append = T)
+}
+
+
+# for down reg
+
+downreg <- read.xlsx(file = 'data/Venn_Downregulated.xlsx', sheetIndex = 1, stringsAsFactors = F)
+downreg <- downreg %>% as_tibble() %>% fill(`Names`, .direction = c("down"))  
+combo_down <- levels(factor(downreg$Names, levels = unique(downreg$Names)))
+
+down_comb <- list()
+for(i in 1:length(combo_down)){
+  down_comb[[i]] <- res_all[res_all$gene_id %in% downreg[downreg$Names == combo_down[i],]$elements,]
+}
+
+
+# 
+for(i in 1:length(combo_down)){
+  write.xlsx(down_comb[[i]],  sheetName = gsub('hour[s]*', '', combo_down)[[i]],  # the sheetname is short
+             file = 'output/down_comb.xlsx', append = T)
+}
+>>>>>>> origin/new_method
