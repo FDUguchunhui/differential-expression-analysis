@@ -20,7 +20,7 @@ library(pheatmap)
 
 
 # read in the dataset
-table <- read.csv('data/kinetics_All_HD.csv', stringsAsFactors = F)
+table <- read.csv('data/Kinetics_All_HD.csv', stringsAsFactors = F)
 
 # 
 listMarts()
