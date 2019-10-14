@@ -152,6 +152,9 @@ length(which(
 # 2019/10/11 this is a deep analysis of Knetics_All_HD.csv 
 # res_list is all the result from DESeq analysis
 
+#******************************************************************************
+# the first part is about first method
+
 res_list <-
   list(
     res_1h = res_1h,
@@ -205,6 +208,7 @@ res_list <-
 #   )
 
 # next get those subset
+# those steps make subsets can be done by using data from website
 ## 1246
 intsc_1246_up <-
   Reduce(f = intersect, lapply(res_list_up_sig, `[[`, 'gene_id'))
@@ -263,10 +267,7 @@ length(intsc_1246_up)
                   res_list_up_sig[['res_6h']]$gene_id))
 }
 
-
-
-
-
+# this block is used to check combinations
 combn(c('1', '2', '4', '6'), m = 3)
 combn(c('1', '2', '4', '6'), m = 2)
 
@@ -311,8 +312,8 @@ combn(c('1', '2', '4', '6'), m = 2)
 # Reduce(f = intersect, res_list_down)
 
 
-
-#
+#***************************************************************************************
+# create a list that contain all result without of lfc and alpha requirement
 res_list_all <-
   lapply(
     res_list,
@@ -322,6 +323,7 @@ res_list_all <-
     reg_LFC = 0
   )
 
+# extract only the 'gene_id' and 'log2FoldChange column'
 res_list_all <-
   lapply(
     lapply(res_list_all , as_tibble, rownames = 'gene_id'),
@@ -330,52 +332,33 @@ res_list_all <-
     `log2FoldChange`
   )
 
-res_all <- Reduce(function(x, y)
+# merge all list into one dataset that contain lfc for all the comparisons for all genes
+# this will the reference dataset to be subsetted
+# in this step the column name has duplicate, but it is okay. Ignore the warning message
+res_all <- Reduce(function(x, y){
   merge(
     x,
     y,
     by = 'gene_id',
     all = TRUE,
     no.dups = T
-  ),
+  )},
   x = res_list_all) %>% as_tibble()
 
+# rename the columns
 colnames(res_all) <- c('gene_id', '1h', '2h', '4h', '6h')
+#****************************************************************************************
 
 
-
-<<<<<<< HEAD
-all <- list(res_all[res_all$gene_id %in% intsc_1246_up, ],
-            res_all[res_all$gene_id %in% set_124, ],
-            res_all[res_all$gene_id %in% set_126, ],
-            res_all[res_all$gene_id %in% set_146, ],
-            res_all[res_all$gene_id %in% set_246, ])
-
-write.xlsx(all[[1]],  sheetName = 'intsc_1246_up',
-           file = 'output/dontknowhowtoname.xlsx')
-write.xlsx(all[[2]],
-           sheetName = '124',
-           file = 'output/dontknowhowtoname.xlsx',
-           append = T)
-write.xlsx(all[[3]],
-           sheetName = '126',
-           file = 'output/dontknowhowtoname.xlsx',
-           append = T)
-write.xlsx(all[[4]],
-           sheetName = '146',
-           file = 'output/dontknowhowtoname.xlsx',
-           append = T)
-write.xlsx(all[[5]],
-           sheetName = '246',
-           file = 'output/dontknowhowtoname.xlsx',
-           append = T)
-=======
+# create a list of dataset of those subsets
 all <- list(res_all[res_all$gene_id %in% intsc_1246_up,],
 res_all[res_all$gene_id %in% set_124,],
 res_all[res_all$gene_id %in% set_126,],
 res_all[res_all$gene_id %in% set_146,],
 res_all[res_all$gene_id %in% set_246,]
 )
+
+#-----------------------------------------------------------------------------------
 
 write.xlsx(all[[1]],  sheetName = 'intsc_1246_up', 
                   file = 'output/dontknowhowtoname.xlsx')
@@ -392,7 +375,13 @@ write.xlsx(all[[5]],  sheetName = '246',
 
 
 
+#*********************************************************************************************
+# the second method using exported data from website
+# this is a tiny difference between results
+
 upreg <- read.xlsx(file = 'data/venn_result Upregulated.xlsx', sheetIndex = 1, stringsAsFactors = F)
+# fill the Names with the last Non Na value
+# this step is important to get gene names of each subset
 upreg <- upreg %>% as_tibble() %>% fill(`Names`, .direction = c("down"))  
 combo_up <- levels(factor(upreg$Names, levels = unique(upreg$Names)))
 
@@ -402,15 +391,15 @@ for(i in 1:length(combo_up)){
 }
 
 
-# 
+#--------------------------------------------------------------------------------------------- 
 for(i in 1:length(combo_up)){
   write.xlsx(up_comb[[i]],  sheetName = sub('Hours', '', combo_up)[[i]],  # the sheetname is short
              file = 'output/up_comb.xlsx', append = T)
 }
+#---------------------------------------------------------------------------------------------
 
 
 # for down reg
-
 downreg <- read.xlsx(file = 'data/Venn_Downregulated.xlsx', sheetIndex = 1, stringsAsFactors = F)
 downreg <- downreg %>% as_tibble() %>% fill(`Names`, .direction = c("down"))  
 combo_down <- levels(factor(downreg$Names, levels = unique(downreg$Names)))
@@ -421,9 +410,9 @@ for(i in 1:length(combo_down)){
 }
 
 
-# 
+# ------------------------------------------------------------------------------------------------
 for(i in 1:length(combo_down)){
   write.xlsx(down_comb[[i]],  sheetName = gsub('hour[s]*', '', combo_down)[[i]],  # the sheetname is short
              file = 'output/down_comb.xlsx', append = T)
 }
->>>>>>> origin/new_method
+#--------------------------------------------------------------------------------------------
