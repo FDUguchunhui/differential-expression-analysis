@@ -1,20 +1,27 @@
+# don't source this script, just run-by-line first half before analysis
+
+
+###! run this before you load any package. If you not, restart your session
+#this option assigns more RAM for java to enable high-RAM-comsuming processing
+# especially in writing large dataset to .xlxs
+#memory.limit(102400)
+options(java.parameters = "-Xmx10048m")
+
 # # install necessary package
 library(BiocManager)
 # if you have install DESeq2, uncomment the followiing line
 # BiocManager::install("DESeq2")
 library(DESeq2)
-library(tidyverse)
 library(biomaRt)
-library(dplyr)
 library(ggplot2)
 library(xlsx)
+library(tidyverse)
+library(magrittr)
+library(dplyr)
 # run next line if you need to get some help from DESeq2
 # browseVignettes("DESeq2")
 
-#this option assigns more RAM for java to enable high-RAM-comsuming processing
-# especially in writing large dataset to .xlxs
-memory.limit(102400)
-options(java.parameters = "-Xmx6048m")
+
 
 
 gene_expr_10h.table <- read.xlsx2('data/10hr_normed_counts.xlsx', sheetName = 'counts', stringsAsFactors = F,
@@ -101,6 +108,10 @@ res_subgroup <- function(res, alpha=0.1, reg_LFC=1, reg_dir='all'){
 
 }
 
+
+
+
+#--------------------------------------------------------------------------------
 #upregulated
 res_LTB4_up <- as.data.frame(res_subgroup(res_LTB4, reg_dir = 'up'))
 res_LTB4_up$gene_name <- row.names(res_LTB4_up)
@@ -193,9 +204,9 @@ res_CFASN_down.unique <- sqldf::sqldf('
               )
              ')
 
-
-res_LTB4_up.unique <- res_LTB4_up.unique[,1:7] %>% select(gene_name, everything())
-res_CFASN_up.unique <- res_CFASN_up.unique[,1:7] %>% select(gene_name, everything())
+res_LTB4_up.unique %<>% as_tibble()
+res_LTB4_up.unique <- res_LTB4_up.unique[,1:7] %>% dplyr::select(gene_name, everything())
+res_CFASN_up.unique <- res_CFASN_up.unique[,1:7] %>% dplyr::select(gene_name, everything())
 
 #down
 res_LTB4_down.unique <- res_LTB4_down.unique[,1:7] %>% select(gene_name, everything())

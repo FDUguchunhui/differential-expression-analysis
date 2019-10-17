@@ -65,4 +65,23 @@ dds$condition <- factor(dds$condition, levels = c("2hr_CF","1h",'2h', '4h', '6h'
 # drop levels that with no sample
 dds$condition <- droplevels(dds$condition)
 
+results(dds, contrast = c('condition', '1h','2hr_CF'))
+
+#---------------------------------------------------------------------
+# just create normalized count
+dds <- estimateSizeFactors(dds)
+normalized_counts <- counts(dds, normalized=TRUE)
+
+## subset gene
+gene_name <- read_table(file = 'data/geneset.txt', skip = 2, col_names = 'gene name',
+           col_types = cols(
+             `gene name` = col_character()
+           ))
+
+pos <- rownames(normalized_counts) %in% pull(gene_name)
+normalized_counts_sub <- normalized_counts[pos,] 
+write.xlsx2(x = normalized_counts_sub, file = 'output/normalized_counts_sub.xlsx')
+
+
+
 

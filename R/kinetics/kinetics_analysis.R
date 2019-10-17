@@ -3,8 +3,31 @@
 # this script is not designed to run automatically, just for personal, quick and dirty analysis
 # My suggestion is that you should check the code, then modify it or write your own
 
+# this analysis script can be reused by many DE analysis result
+#!!! my variable names are reusable, my suggestion is to clean your environment 
+# and rebuild you environment before you run analysis
+
+
+
 library(tidyverse)
 library(utils)
+
+# get normalized data
+# dds is a reusable name, take care which dds you use
+normalized_counts <- counts(dds, normalized=TRUE)
+gene_name <- read_table(file = 'data/geneset.txt', skip = 2, col_names = 'gene name',
+                        col_types = cols(
+                          `gene name` = col_character()
+                        ))
+
+pos <- rownames(normalized_counts) %in% pull(gene_name)
+normalized_counts_sub <- normalized_counts[pos,] 
+write.xlsx2(x = normalized_counts_sub, file = 'output/ts_normalized_counts_sub.xlsx')
+
+
+
+
+
 
 #get all 4 upregluated genes
 res_list <-
