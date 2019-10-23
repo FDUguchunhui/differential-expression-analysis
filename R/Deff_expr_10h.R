@@ -80,35 +80,7 @@ res_CFASN <- results(gene_10h.dds, contrast=c("condition","CFASN_TM", "blood"))
 # comparison within inc and blood
 res_inc <- results(gene_10h.dds, contrast=c("condition","CFASN_inc", "blood"))
 
-
-# this function is used to subset the neeeded gene from RESULT object
-#function get those LFC greate than 1 and the adjusted P-value is less than 0.1
-res_subgroup <- function(res, alpha=0.1, reg_LFC=1, reg_dir='all'){
-
-  # res is an obj from DEseq2.result function
-  # alpha gives the significant level for adjusted P-value
-  # reg gives the regulation level change in log2 fold change in absolute value
-  # reg_dir gives which regulation direction you want to subset you gene
-  # three options: all -- up and down
-  #                up  -- only up regulated
-  #                down -- only down regulated
-  res_sig_pos <- (res$padj < alpha)
-  res_sig_pos[is.na(res_sig_pos)] <- F
-  if(reg_dir == 'all'){
-    res_LFC_pos <- (res$log2FoldChange > reg_LFC) | (res$log2FoldChange < -reg_LFC)
-  }
-  else if(reg_dir == 'up'){
-    res_LFC_pos <- (res$log2FoldChange > reg_LFC)
-  }
-  else if(reg_dir == 'down'){
-    res_LFC_pos <- (res$log2FoldChange < -reg_LFC)
-  }
-
-  return(res[res_LFC_pos & res_sig_pos,])
-
-}
-
-
+res_list_all_10h <- list(res_LTB4, res_CFASN, res_inc)
 
 
 #--------------------------------------------------------------------------------

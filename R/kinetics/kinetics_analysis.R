@@ -24,10 +24,35 @@ pos <- rownames(normalized_counts) %in% pull(gene_name)
 normalized_counts_sub <- normalized_counts[pos,] 
 write.xlsx2(x = normalized_counts_sub, file = 'output/ts_normalized_counts_sub.xlsx')
 
+# 20191023
+# kinetics_all
+{
+res_list <-
+  list(
+    res_1h = res_1h,
+    res_2h = res_2h,
+    res_4h = res_4h,
+    res_6h = res_6h
+  )
+pos <- res_all$gene_name %in% pull(gene_name)
+res_kinetics_sub <- res_all[pos,]
+write.xlsx2(x = res_kinetics_sub, file = 'output/res_kinetics_sub.xlsx')
+}
+# 10h
+{
+res_all <- DEresult(res_list_all_10h, col_name = c('gene_name','res_LTB4', 'res_CFASN', 'res_inc'))
+pos <- res_all$gene_name %in% pull(gene_name)
+res_10h_sub <- res_all[pos,]
+write.xlsx2(x = res_10h_sub, file = 'output/res_10h_sub.xlsx')
+}
 
-
-
-
+#trb
+{
+  res_all <- DEresult(res_list_all_trb)
+  pos <- res_all$gene_name %in% pull(gene_name)
+  res_trb_sub <- res_all[pos,]
+  write.xlsx2(x = res_trb_sub, file = 'output/res_trb_sub.xlsx')
+}
 
 #get all 4 upregluated genes
 res_list <-
@@ -335,44 +360,8 @@ combn(c('1', '2', '4', '6'), m = 2)
 # Reduce(f = intersect, res_list_down)
 
 
-#***************************************************************************************
-# create a list that contain all result without of lfc and alpha requirement
-res_list_all <-
-  lapply(
-    res_list,
-    res_subgroup,
-    reg_dir = 'all',
-    alpha = 1,
-    reg_LFC = 0
-  )
 
-# extract only the 'gene_id' and 'log2FoldChange column'
-res_list_all <-
-  lapply(
-    lapply(res_list_all , as_tibble, rownames = 'gene_id'),
-    dplyr::select,
-    `gene_id`,
-    `log2FoldChange`
-  )
-
-# merge all list into one dataset that contain lfc for all the comparisons for all genes
-# this will the reference dataset to be subsetted
-# in this step the column name has duplicate, but it is okay. Ignore the warning message
-res_all <- Reduce(function(x, y){
-  merge(
-    x,
-    y,
-    by = 'gene_id',
-    all = TRUE,
-    no.dups = T
-  )},
-  x = res_list_all) %>% as_tibble()
-
-# rename the columns
-colnames(res_all) <- c('gene_id', '1h', '2h', '4h', '6h')
-#****************************************************************************************
-
-
+res_all <- DEresult(res_list_all)
 # create a list of dataset of those subsets
 all <- list(res_all[res_all$gene_id %in% intsc_1246_up,],
 res_all[res_all$gene_id %in% set_124,],

@@ -61,12 +61,18 @@ dds <- dds[keep,]
 # other statement if also available for this purpose
 # Caution!: the document only give example for factor with two levels, not sure about accuracy for
 #   factor with more than 2 levels
-dds$condition <- factor(dds$condition, levels = c("2hr_CF","1h",'2h', '4h', '6h'))
+dds$condition <- factor(dds$condition, levels = c("2hr_CF", "2hr_LTB4", '8hr_CFminus', '8hr_CFplus'))
 # drop levels that with no sample
 dds$condition <- droplevels(dds$condition)
 
-results(dds, contrast = c('condition', '1h','2hr_CF'))
+dds <- DESeq(dds)
 
+res_2hr_LTB4 <- results(dds, contrast = c('condition', "2hr_LTB4",'2hr_CF'))
+res_8hr_CFminus <- results(dds, contrast = c('condition', '8hr_CFminus','2hr_CF'))
+res_8hr_CFplus <- results(dds, contrast = c('condition', '8hr_CFplus','2hr_CF'))
+
+res_list_all_trb <- list('res_2hr_LTB4' = res_2hr_LTB4  , 'res_8hr_CFminus' = res_8hr_CFminus, 
+                         'res_8hr_CFplus' = res_8hr_CFplus)
 #---------------------------------------------------------------------
 # just create normalized count
 dds <- estimateSizeFactors(dds)
