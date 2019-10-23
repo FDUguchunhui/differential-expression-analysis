@@ -7,6 +7,7 @@ options(java.parameters = "-Xmx4048m")
 library(BiocManager)
 # if you have install DESeq2, uncomment the following line
 # BiocManager::install("DESeq2")
+# BiocManager::install("biomaRt")
 library(DESeq2)
 library(tidyverse)
 library(biomaRt)

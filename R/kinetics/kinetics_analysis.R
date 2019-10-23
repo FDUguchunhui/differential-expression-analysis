@@ -11,6 +11,7 @@
 
 library(tidyverse)
 library(utils)
+library(autoHeatmap)
 
 # get normalized data
 # dds is a reusable name, take care which dds you use
@@ -38,12 +39,29 @@ pos <- res_all$gene_name %in% pull(gene_name)
 res_kinetics_sub <- res_all[pos,]
 write.xlsx2(x = res_kinetics_sub, file = 'output/res_kinetics_sub.xlsx')
 }
+# all complete result
+{
+sheet_name <- c('res_1h', 'res_2h', 'res_4h', 'res_6h')
+for(i in 1:length(sheet_name)){
+  write.xlsx2(x = res_list_all[[i]], file = 'output/complete_result_kinetics.xlsx',
+              sheetName = sheet_name[i], append = T)
+}
+}  
+
 # 10h
 {
 res_all <- DEresult(res_list_all_10h, col_name = c('gene_name','res_LTB4', 'res_CFASN', 'res_inc'))
 pos <- res_all$gene_name %in% pull(gene_name)
 res_10h_sub <- res_all[pos,]
 write.xlsx2(x = res_10h_sub, file = 'output/res_10h_sub.xlsx')
+}
+
+{
+sheet_name <- c('res_LTB4', 'res_CFASN', 'res_inc')
+for(i in 1:length(res_list_all_10h)){
+  write.xlsx2(x = res_list_all_10h[[i]], file = 'output/complete_result_10.xlsx',
+              sheetName = sheet_name[i], append = T)
+}
 }
 
 #trb
@@ -53,6 +71,10 @@ write.xlsx2(x = res_10h_sub, file = 'output/res_10h_sub.xlsx')
   res_trb_sub <- res_all[pos,]
   write.xlsx2(x = res_trb_sub, file = 'output/res_trb_sub.xlsx')
 }
+write.xlsx2(x = res_list_all_trb[['res_8hrp_2hrCF']], file = 'output/complete_result_trb.xlsx',
+            sheetName = 'res_8hrp_2hrCF')
+write.xlsx2(x = res_list_all_trb[['res_8hrp_8hrm']], file = 'output/complete_result_trb.xlsx',
+            sheetName = 'res_8hrp_8hrm', append = T)
 
 #get all 4 upregluated genes
 res_list <-
