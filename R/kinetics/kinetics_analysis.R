@@ -23,7 +23,7 @@ gene_name <- read_table(file = 'data/geneset.txt', skip = 2, col_names = 'gene n
 
 pos <- rownames(normalized_counts) %in% pull(gene_name)
 normalized_counts_sub <- normalized_counts[pos,] 
-write.xlsx2(x = normalized_counts_sub, file = 'output/ts_normalized_counts_sub.xlsx')
+write.xlsx2(x = normalized_counts_sub, file = 'output/trb_normalized_counts_sub.xlsx')
 
 # 20191023
 # kinetics_all
@@ -75,6 +75,9 @@ write.xlsx2(x = res_list_all_trb[['res_8hrp_2hrCF']], file = 'output/complete_re
             sheetName = 'res_8hrp_2hrCF')
 write.xlsx2(x = res_list_all_trb[['res_8hrp_8hrm']], file = 'output/complete_result_trb.xlsx',
             sheetName = 'res_8hrp_8hrm', append = T)
+
+
+
 
 #get all 4 upregluated genes
 res_list <-

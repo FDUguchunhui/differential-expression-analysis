@@ -1,3 +1,5 @@
+options(java.parameters = "-Xmx10048m")
+
 library(DESeq2)
 library(tidyverse)
 library(xlsx)
@@ -61,8 +63,8 @@ dds <- dds[keep,]
 # other statement if also available for this purpose
 # Caution!: the document only give example for factor with two levels, not sure about accuracy for
 #   factor with more than 2 levels
+#run the one of following line
 dds$condition <- factor(dds$condition, levels = c("2hr_CF", "2hr_LTB4", '8hr_CFminus', '8hr_CFplus'))
-dds$condition <- factor(dds$condition, levels = c("2hr_CF", '8hr_CFplus'))
 # drop levels that with no sample
 dds$condition <- droplevels(dds$condition)
 
@@ -71,7 +73,7 @@ dds <- DESeq(dds)
 resultsNames(dds)
 
 res_8hrp_2hrCF <- results(dds, contrast = c('condition', '8hr_CFplus', "2hr_CF"))
-res_8hrp_8hrm<- results(dds, contrast = c('condition', '8hr_CFplus','8hr_CFminus'))
+res_8hrp_8hrm <- results(dds, contrast = c('condition', '8hr_CFplus','8hr_CFminus'))
 
 res_list_all_trb <- list('res_8hrp_2hrCF' = res_8hrp_2hrCF  , 'res_8hrp_8hrm' = res_8hrp_8hrm)
 #---------------------------------------------------------------------
