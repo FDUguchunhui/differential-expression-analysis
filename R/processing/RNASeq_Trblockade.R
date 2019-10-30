@@ -74,6 +74,8 @@ resultsNames(dds)
 
 res_8hrp_2hrCF <- results(dds, contrast = c('condition', '8hr_CFplus', "2hr_CF"))
 res_8hrp_8hrm <- results(dds, contrast = c('condition', '8hr_CFplus','8hr_CFminus'))
+
+# 
 # write.xlsx(x = res_subgroup(res_8hrp_8hrm,reg_dir = 'up'), file = 'output/res_8hrp_8hrm_up.xlsx')
 # write.xlsx(x = res_subgroup(res_8hrp_8hrm,reg_dir = 'down'), file = 'output/res_8hrp_8hrm_down.xlsx')
 # write.xlsx(x = res_subgroup(res_8hrp_2hrCF,reg_dir = 'up'), file = 'output/res_8hrp_2hrCF_up.xlsx')
@@ -95,3 +97,5 @@ res_8hrp_8hrm <- results(dds, contrast = c('condition', '8hr_CFplus','8hr_CFminu
 res_list_all <- list('res_8hrp_2hrCF' = res_8hrp_2hrCF  , 'res_8hrp_8hrm' = res_8hrp_8hrm)
 #---------------------------------------------------------------------
 
+write.xlsx(x = res_8hrp_2hrCF, file = 'output/result_amanitin.xlsx', sheet = 'res_8hrp_2hrCF')
+write.xlsx(x = res_8hrp_8hrm, file = 'output/result_amanitin.xlsx', sheet = 'res_8hrp_8hrm', append = T)

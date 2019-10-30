@@ -41,7 +41,7 @@ normalized_counts_sub <- normalized_counts[pos,]
 # output is the only part that you need to give your only parameter -
 #the filename
 write.xlsx2(x = normalized_counts_sub, 
-            file = 'output/normalized_counts_sub.xlsx')
+            file = 'output/normalized_counts_genesetsub_amanitin.xlsx')
 
 #------------------------------------------------------------------------
 
@@ -75,3 +75,96 @@ diego2 <- autoHeatmap::res_subgroup(res_8hrp_2hrCF, alpha = 0.1, reg_dir = 'down
 
 
 #------------------------------------------------------------
+# Scenario 4
+
+
+
+
+upreg <- read.xlsx(file = 'data/venn_result Upregulated.xlsx', sheetIndex = 1, stringsAsFactors = F)
+# fill the Names with the last Non Na value
+# this step is important to get gene names of each subset
+upreg <- upreg %>% as_tibble() %>% fill(`Names`, .direction = c("down"))  
+combo_up <- levels(factor(upreg$Names, levels = unique(upreg$Names)))
+
+up_comb <- list()
+for(i in 1:length(combo_up)){
+  up_comb[[i]] <- res_all[res_all$gene_id %in% upreg[upreg$Names == combo_up[i],]$elements,]
+}
+
+
+#--------------------------------------------------------------------------------------------- 
+for(i in 1:length(combo_up)){
+  write.xlsx(up_comb[[i]],  sheetName = sub('Hours', '', combo_up)[[i]],  # the sheetname is short
+             file = 'output/up_comb.xlsx', append = T)
+}
+#---------------------------------------------------------------------------------------------
+
+
+# for down reg
+downreg <- read.xlsx(file = 'data/Venn_Downregulated.xlsx', sheetIndex = 1, stringsAsFactors = F)
+downreg <- downreg %>% as_tibble() %>% fill(`Names`, .direction = c("down"))  
+combo_down <- levels(factor(downreg$Names, levels = unique(downreg$Names)))
+
+down_comb <- list()
+for(i in 1:length(combo_down)){
+  down_comb[[i]] <- res_all[res_all$gene_id %in% downreg[downreg$Names == combo_down[i],]$elements,]
+}
+
+
+# ------------------------------------------------------------------------------------------------
+for(i in 1:length(combo_down)){
+  write.xlsx(down_comb[[i]],  sheetName = gsub('hour[s]*', '', combo_down)[[i]],  # the sheetname is short
+             file = 'output/down_comb.xlsx', append = T)
+}
+#--------------------------------------------------------------------------------------------
+
+
+
+
+
+
+#----------------------------------------------------------------------------------------
+# scenario 5
+upreg <- read.xlsx(file = 'data/venn_result Upregulated.xlsx', sheetIndex = 1, stringsAsFactors = F)
+# fill the Names with the last Non Na value
+# this step is important to get gene names of each subset
+upreg <- upreg %>% as_tibble() %>% fill(`Names`, .direction = c("down"))  
+combo_up <- levels(factor(upreg$Names, levels = unique(upreg$Names)))
+
+up_comb <- list()
+for(i in 1:length(combo_up)){
+  up_comb[[i]] <- normalized_counts[rownames(normalized_counts) %in% upreg[upreg$Names == combo_up[i],]$elements,]
+}
+
+
+#--------------------------------------------------------------------------------------------- 
+for(i in 1:length(combo_up)){
+  write.xlsx(up_comb[[i]],  sheetName = sub('Hours', '', combo_up)[[i]],  # the sheetname is short
+             file = 'output/up_comb_normdata_kinetics.xlsx', append = T)
+}
+#---------------------------------------------------------------------------------------------
+
+
+# for down reg
+downreg <- read.xlsx(file = 'data/Venn_Downregulated.xlsx', sheetIndex = 1, stringsAsFactors = F)
+# fill the Names with the last Non Na value
+# this step is important to get gene names of each subset
+downreg <- downreg %>% as_tibble() %>% fill(`Names`, .direction = c("down"))  
+combo_down <- levels(factor(downreg$Names, levels = unique(downreg$Names)))
+
+down_comb <- list()
+for(i in 1:length(combo_down)){
+  down_comb[[i]] <- normalized_counts[rownames(normalized_counts) %in% downreg[downreg$Names == combo_down[i],]$elements,]
+}
+
+
+#--------------------------------------------------------------------------------------------- 
+# sheet 7 doesn't have any observation
+down_comb <- down_comb[-7]
+sheetname <- gsub('hour[s]*', '', combo_down)
+sheetname <- sheetname[-7]
+for(i in 1:(length(combo_down) - 1)){
+  write.xlsx(down_comb[[i]],  sheetName = sheetname[i],  # the sheetname is short
+             file = 'output/down_comb_normdata_kinetics.xlsx', append = T)
+}
+

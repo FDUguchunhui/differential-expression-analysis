@@ -29,7 +29,6 @@ normalized_counts <- counts(dds, normalized=TRUE)
 # method 2, if you already have result from DESeq(), you can use
 #following code
 normalized_counts <- counts(dds, normalized=TRUE)
-mean(normalized_counts[,"HD1_8hr_CFplus"] >  normalized_counts[,"HD1_8hr_CFminus"])
 #---------------------------------------------------------------------
 
 
