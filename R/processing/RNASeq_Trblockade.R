@@ -96,6 +96,6 @@ res_8hrp_8hrm <- results(dds, contrast = c('condition', '8hr_CFplus','8hr_CFminu
 
 res_list_all <- list('res_8hrp_2hrCF' = res_8hrp_2hrCF  , 'res_8hrp_8hrm' = res_8hrp_8hrm)
 #---------------------------------------------------------------------
-
-write.xlsx(x = res_8hrp_2hrCF, file = 'output/result_amanitin.xlsx', sheet = 'res_8hrp_2hrCF')
-write.xlsx(x = res_8hrp_8hrm, file = 'output/result_amanitin.xlsx', sheet = 'res_8hrp_8hrm', append = T)
+# 
+# write.xlsx(x = res_8hrp_2hrCF, file = 'output/result_amanitin.xlsx', sheet = 'res_8hrp_2hrCF')
+# write.xlsx(x = res_8hrp_8hrm, file = 'output/result_amanitin.xlsx', sheet = 'res_8hrp_8hrm', append = T)

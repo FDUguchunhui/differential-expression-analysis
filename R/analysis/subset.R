@@ -26,7 +26,7 @@ gene_name <- read_table(file = 'data/geneset.txt', skip = 2,
                           `gene name` = col_character()
                         ))
 
-pos <- rownames(normalized_counts) %in% pull(gene_name)
+
 #===================================================================
 
 
@@ -34,14 +34,14 @@ pos <- rownames(normalized_counts) %in% pull(gene_name)
 # scenario 1
 # subset a rawdata/normalized_data by a list of genes 
 
-
+pos <- rownames(normalized_counts) %in% pull(gene_name)
 normalized_counts_sub <- normalized_counts[pos,] 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # output is the only part that you need to give your only parameter -
 #the filename
 write.xlsx2(x = normalized_counts_sub, 
-            file = 'output/normalized_counts_genesetsub_amanitin.xlsx')
+            file = 'output/normalized_counts_genesetsub_10hour.xlsx')
 
 #------------------------------------------------------------------------
 
@@ -49,9 +49,6 @@ write.xlsx2(x = normalized_counts_sub,
 #------------------------------------------------------------------------
 # scenario 2
 # result_from_DESeq2
-
-
-
 
 # kinetics_all
 {
@@ -63,10 +60,37 @@ write.xlsx2(x = normalized_counts_sub,
       res_6h = res_6h
     )
   DEresult(res_list)
-
 }
 
 #--------------------------------------------------------------------
+
+#--------------------------------------------------------------------------
+# get full results of all comparison of interest with subset
+{
+  sheetname <- names(res_list_all)
+  for(i in 1:length(res_list_all)){
+    pos <- rownames(res_list_all[[i]]) %in% pull(gene_name)
+    write.xlsx(x = res_list_all[[i]][pos,],
+               file = 'output/result_10hour_genesetsub.xlsx',
+               sheet = sheetname[i], append = T)
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # get up/down regulated genes
 
 diego <- autoHeatmap::res_subgroup(res_8hrp_2hrCF, alpha = 0.1, reg_dir = 'up')

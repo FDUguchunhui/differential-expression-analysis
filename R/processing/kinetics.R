@@ -165,7 +165,10 @@ res_6h <- results(dds,contrast=c("condition","6h","blood"))
 resultsNames(dds)
 
 
-
+res_list_all <- list(res_1h = res_1h, 
+                     res_2h = res_2h,
+                     res_4h = res_4h,
+                     res_6h = res_6h)
 # this is the end, leave following code alone
 #----------------------------------------------------------------------
 # log fold change shrinkage(LFC Shrinkage) may not neccessary here. for using it,

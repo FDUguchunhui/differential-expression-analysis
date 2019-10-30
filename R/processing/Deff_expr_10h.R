@@ -32,57 +32,65 @@ all(!duplicated(gene_expr_10h.tibble[,1]))
 
 
 #use the geneid as row.names
-gene_10h.table_rownames <- data.frame(gene_expr_10h.tibble[,-1], row.names=gene_expr_10h.table[,1])
-gene_10h.count_maxtrix <- as.matrix(gene_10h.table_rownames)
-gene_10h.count_maxtrix <- round(gene_10h.count_maxtrix)
+table_rownames <- data.frame(gene_expr_10h.tibble[,-1], row.names=gene_expr_10h.table[,1])
+count_maxtrix <- as.matrix(table_rownames)
+count_maxtrix <- round(count_maxtrix)
 # make the mode of matrix integer otherwise it will be number
-head(gene_10h.count_maxtrix)
+head(count_maxtrix)
 
-gene_10h.coldata <- data.frame(condition = c(rep('blood', 4),
+coldata <- data.frame(condition = c(rep('blood', 4),
                                     rep('LTB4_TM', 5),
                                     rep('CFASN_TM', 5),
                                     rep('CFASN_inc', 2)),
-                      row.names = colnames(gene_10h.count_maxtrix[,1:16]))
+                      row.names = colnames(count_maxtrix[,1:16]))
 
-all(rownames(gene_10h.coldata) == colnames(gene_10h.count_maxtrix[1:16]))
+all(rownames(coldata) == colnames(count_maxtrix[1:16]))
 
 #create DESeqDataSet(dds) object, dds is a container for intermediate data
-gene_10h.dds <- DESeqDataSetFromMatrix(countData = gene_10h.count_maxtrix[,1:16],
-                              colData = gene_10h.coldata,
+dds <- DESeqDataSetFromMatrix(countData = count_maxtrix[,1:16],
+                              colData = coldata,
                               design = ~ condition)
 
 # pre-filtering
 # by removing rows in which there are very few reads, we reduce the memory size of the dds data object,
 #   and we increase the speed of the transformation and testing functions within DESeq2
-keep <- rowSums(counts(gene_10h.dds)) >= 10
-gene_10h.dds <- gene_10h.dds[keep,]
+keep <- rowSums(counts(dds)) >= 10
+dds <- dds[keep,]
 
 # set dds condition with all time points
 # set 'blood' as base level, the default base level is determined by alphabet order
 # other statement if also available for this purpose
 # Caution!: the document only give example for factor with two levels, not sure about accuracy for
 #   factor with more than 2 levels
-gene_10h.dds$condition <- factor(gene_10h.dds$condition, levels = c("blood","LTB4_TM",'CFASN_TM', 'CFASN_inc'))
+dds$condition <- factor(dds$condition, levels = c("blood","LTB4_TM",'CFASN_TM', 'CFASN_inc'))
 # drop levels that with no sample
-gene_10h.dds$condition <- droplevels(gene_10h.dds$condition)
+dds$condition <- droplevels(dds$condition)
 
 
 # DEseq analysis
-gene_10h.dds <- DESeq(gene_10h.dds)
+dds <- DESeq(dds)
 
 
 # for different condition you just change 6h to i.e. 1h, 2h, 4h
 # may can be done by lapply() function, not sure how to set the func argument
 # with different arguments
-res_LTB4 <- results(gene_10h.dds, contrast=c("condition","LTB4_TM", "blood"))
-res_CFASN <- results(gene_10h.dds, contrast=c("condition","CFASN_TM", "blood"))
+res_LTB4 <- results(dds, contrast=c("condition","LTB4_TM", "blood"))
+res_CFASN <- results(dds, contrast=c("condition","CFASN_TM", "blood"))
 
 # comparison within inc and blood
-res_inc <- results(gene_10h.dds, contrast=c("condition","CFASN_inc", "blood"))
+res_inc <- results(dds, contrast=c("condition","CFASN_inc", "blood"))
 
-res_list_all_10h <- list(res_LTB4, res_CFASN, res_inc)
+res_list_all <- list(res_LTB4, res_CFASN, res_inc)
 
 
+
+
+
+
+
+
+
+# do not run the following code
 #--------------------------------------------------------------------------------
 #upregulated
 res_LTB4_up <- as.data.frame(res_subgroup(res_LTB4, reg_dir = 'up'))
