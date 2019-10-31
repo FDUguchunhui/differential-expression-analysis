@@ -148,12 +148,20 @@ for(i in 1:length(combo_down)){
 
 
 #----------------------------------------------------------------------------------------
+
+upreg[upreg$Names == "1 Hour Up 2 Hours Up 4 Hours Up 6 Hours Up",]$elements
+pos <- upreg[upreg$Names == "1 Hour Up 2 Hours Up 4 Hours Up 6 Hours Up",]$elements %in% rownames(normalized_counts)
+which(pos == F)
+
+
 # scenario 5
 upreg <- read.xlsx(file = 'data/venn_result Upregulated.xlsx', sheetIndex = 1, stringsAsFactors = F)
 # fill the Names with the last Non Na value
 # this step is important to get gene names of each subset
 upreg <- upreg %>% as_tibble() %>% fill(`Names`, .direction = c("down"))  
 combo_up <- levels(factor(upreg$Names, levels = unique(upreg$Names)))
+
+
 
 up_comb <- list()
 for(i in 1:length(combo_up)){
@@ -167,6 +175,16 @@ for(i in 1:length(combo_up)){
              file = 'output/up_comb_normdata_kinetics.xlsx', append = T)
 }
 #---------------------------------------------------------------------------------------------
+
+
+
+# 
+# downreg[downreg$Names == "  1 hour down 2 hours down 4 hours down 6 hours down",]$elements
+# pos <- downreg[downreg$Names == "  1 hour down 2 hours down 4 hours down 6 hours down",]$elements %in% rownames(normalized_counts)
+# which(pos == F)
+
+
+
 
 
 # for down reg

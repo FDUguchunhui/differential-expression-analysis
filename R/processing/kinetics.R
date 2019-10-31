@@ -51,6 +51,8 @@ listFilters(mart)
 
 load('temp/G_list.rda')
 
+
+
 #-------------------------------------------------------------------
 #write.xlsx2(G_list, 'gene_id_to_name.xlsx')
 #------------------------------------------------------------------
@@ -169,6 +171,14 @@ res_list_all <- list(res_1h = res_1h,
                      res_2h = res_2h,
                      res_4h = res_4h,
                      res_6h = res_6h)
+
+# sheetnames = names(res_list_all)
+# for(i in 1:4){
+#   write.xlsx(res_list_all, file = 'output/kinetics_result.xlsx', sheetName = sheetnames[i], append =T)
+# }
+
+
+
 # this is the end, leave following code alone
 #----------------------------------------------------------------------
 # log fold change shrinkage(LFC Shrinkage) may not neccessary here. for using it,
