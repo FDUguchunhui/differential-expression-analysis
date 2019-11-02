@@ -9,19 +9,36 @@ library(BiocManager)
 # BiocManager::install("DESeq2")
 # BiocManager::install("biomaRt")
 library(DESeq2)
-library(tidyverse)
 library(biomaRt)
-library(dplyr)
 library(ggplot2)
 library(xlsx)
 library(pheatmap)
+library(tidyverse)
 # run next line if you need to get some help from DESeq2
 # browseVignettes("DESeq2")
 
 
 
 # read in the dataset
-table <- read.csv('data/Kinetics_All_HD.csv', stringsAsFactors = F)
+table <- read_csv('data/Kinetics_All_HD.csv', col_types = cols(
+  Geneid1 = col_character(),
+  Geneid = col_character(),
+  HD1_Blood = col_double(),
+  HD2_Blood = col_double(),
+  HD6_Blood = col_double(),
+  HD1_1H = col_double(),
+  HD2_1H = col_double(),
+  HD6_1H = col_double(),
+  HD1_2H = col_double(),
+  HD2_2H = col_double(),
+  HD6_2H = col_double(),
+  HD1_4H = col_double(),
+  HD2_4H = col_double(),
+  HD6_4H = col_double(),
+  HD1_6H = col_double(),
+  HD2_6H = col_double(),
+  HD6_6H = col_double()
+))
 
 # 
 listMarts()
@@ -30,11 +47,6 @@ listDatasets(ensembl)
 
 mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
 listFilters(mart)
-
-# G_list_1 <- getBM(filters= "hgnc_symbol",
-#                 attributes= c("ensembl_gene_id", 'hgnc_symbol')
-#                 ,values=genes,mart= mart)
-
 
 
 #--------------------------------------------------------------------------
@@ -110,13 +122,13 @@ head(table_nodup)
 
 
 
-
+count_maxtrix <- as.matrix(table_rownames)
 #make the matrix needed for next step
 
 #use the geneid as row.names 
 # caution! must be unique to use as row.names(primary key)
 table_rownames <- data.frame(table_nodup[,-1], row.names=table_nodup[,1])
-count_maxtrix <- as.matrix(table_rownames)
+
 # make the mode of matrix integer otherwise it will be number
 mode(count_maxtrix) <- 'integer'
 head(count_maxtrix)
