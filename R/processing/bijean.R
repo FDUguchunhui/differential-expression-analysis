@@ -30,7 +30,8 @@ library(magrittr)
 
 #-----------------------------------------------------------------------------------
 # read in the dataset
-dat <- read_csv('data/Bijean/BIJEAN RNA SEQ COUNTS.csv', col_types = cols(
+# ignore the warning
+dat <- read_csv('data/BIJEAN RNA SEQ COUNTS.csv', col_types = cols(
   .default = col_double(),
   Geneid = col_character(),
   X70 = col_logical()
@@ -43,20 +44,21 @@ dat <- dat %>% select(-X70)
 #********************************************************************************************** 
 # # translate ensembl_gene_id
 # # check available bioMart databases
-# listMarts()
-# ensembl=useMart("ensembl")
-# # check available datasets
-# listDatasets(ensembl)
-# mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
-# # check available filters
-# listFilters(mart)
-# searchFilters(mart, pattern = 'name')
-# 
-# gene_name <- getBM(filters= "ensembl_gene_id",
-#                 attributes= c("ensembl_gene_id", 'external_gene_name')
-#                 ,values=dat$Geneid,mart= mart)
 
-# save(gene_name, file = 'temp/gene_name.rda')
+listMarts()
+ensembl=useMart("ensembl")
+# # check available datasets
+listDatasets(ensembl)
+mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
+# # check available filters
+listFilters(mart)
+searchFilters(mart, pattern = 'name')
+#
+gene_name <- getBM(filters= "ensembl_gene_id",
+                 attributes= c("ensembl_gene_id", 'external_gene_name'),
+                 values=dat$Geneid,mart= mart)
+
+save(gene_name, file = 'temp/gene_name.rda')
 #*******************************************************************************************
 
 load(file = 'temp/gene_name.rda')
@@ -78,8 +80,8 @@ dat %<>% select(external_gene_name, everything(), -Geneid)
 # this could take about 1 min
 # run the code within * if it is your first time to run it
 #******************************************************************************
-# dat <- dat %>% group_by(external_gene_name) %>% summarise_all(.funs = mean)
-# save(dat, file = 'temp/dat.rda')
+dat <- dat %>% group_by(external_gene_name) %>% summarise_all(.funs = mean)
+save(dat, file = 'temp/dat.rda')
 #******************************************************************************
 load('temp/dat.rda')
 
@@ -201,6 +203,25 @@ res.CF_M1.HC_M1 <- results(ddsColl, contrast = c('condition', 'CF_M1', 'HC_M1'))
 res.CF_M2.HC_M2 <- results(ddsColl, contrast = c('condition', 'CF_M2', 'HC_M2'))
 res.CF_M17.HC_M17 <- results(ddsColl, contrast = c('condition', 'CF_M17', 'HC_M17'))
 
+result_list <- c(res.HC_HC_TRANS.HC_RosSep = res.HC_HC_TRANS.HC_RosSep,
+                 res.HC_CF_TRANS.HC_RosSe = res.HC_CF_TRANS.HC_RosSep,
+                 
+                 res.CF_HC_TRANS.CF_RosSep = res.CF_HC_TRANS.CF_RosSep,
+                 res.CF_CF_TRANS.CF_RosSep = res.CF_CF_TRANS.CF_RosSep,
+                 
+                 res.CF_M0.HC_M0 = res.CF_M0.HC_M0,
+                 res.CF_M1.HC_M1 = res.CF_M1.HC_M1,
+                 res.CF_M2.HC_M2 = res.CF_M2.HC_M2,
+                 res.CF_M17.HC_M17 = res.CF_M17.HC_M17
+                 )
 
+
+#----------------------------------------------------------------------------------------
+sheetname <- names(result_list)
+for(i in 1:length(result_list)){
+  write.xlsx(x = result_list[[i]], file = 'output/bijean_result.xlsx', 
+             sheetName = sheetname[i],
+             append = T)
+}
 
 
