@@ -185,43 +185,48 @@ resultsNames(ddsColl)
 # }
 
 
-res.CF_RosSep.HC_RosSep <- results(ddsColl, contrast = c('condition', 'CF_RosSep', 'HC_RosSep'))
-res.CF_HC_TRANS.HC_HC_TRANS <- results(ddsColl, contrast = c('condition', 'CF_HC_TRANS', 'HC_HC_TRANS'))
-res.CF_CF_TRANS.HC_CF_TRANS <- results(ddsColl, contrast = c('condition', 'CF_CF_TRANS', 'HC_CF_TRANS'))
+# res.CF_RosSep.HC_RosSep <- results(ddsColl, contrast = c('condition', 'CF_RosSep', 'HC_RosSep'))
+# res.CF_HC_TRANS.HC_HC_TRANS <- results(ddsColl, contrast = c('condition', 'CF_HC_TRANS', 'HC_HC_TRANS'))
+# res.CF_CF_TRANS.HC_CF_TRANS <- results(ddsColl, contrast = c('condition', 'CF_CF_TRANS', 'HC_CF_TRANS'))
+# 
+# #HC
+# res.HC_HC_TRANS.HC_RosSep <- results(ddsColl, contrast = c('condition', 'HC_HC_TRANS', 'HC_RosSep'))
+# res.HC_CF_TRANS.HC_RosSep <- results(ddsColl, contrast = c('condition', 'HC_CF_TRANS', 'HC_RosSep'))
+# 
+# #CF
+# res.CF_HC_TRANS.CF_RosSep <- results(ddsColl, contrast = c('condition',  'CF_HC_TRANS', 'CF_RosSep'))
+# res.CF_CF_TRANS.CF_RosSep <- results(ddsColl, contrast = c('condition',  'CF_CF_TRANS', 'CF_RosSep'))
+# 
+# # macrophages
+# res.CF_M0.HC_M0 <- results(ddsColl, contrast = c('condition', 'CF_M0', 'HC_M0'))
+# res.CF_M1.HC_M1 <- results(ddsColl, contrast = c('condition', 'CF_M1', 'HC_M1'))
+# res.CF_M2.HC_M2 <- results(ddsColl, contrast = c('condition', 'CF_M2', 'HC_M2'))
+# res.CF_M17.HC_M17 <- results(ddsColl, contrast = c('condition', 'CF_M17', 'HC_M17'))
+# 
+# result_list <- c(res.HC_HC_TRANS.HC_RosSep = res.HC_HC_TRANS.HC_RosSep,
+#                  res.HC_CF_TRANS.HC_RosSe = res.HC_CF_TRANS.HC_RosSep,
+#                  
+#                  res.CF_HC_TRANS.CF_RosSep = res.CF_HC_TRANS.CF_RosSep,
+#                  res.CF_CF_TRANS.CF_RosSep = res.CF_CF_TRANS.CF_RosSep,
+#                  
+#                  res.CF_M0.HC_M0 = res.CF_M0.HC_M0,
+#                  res.CF_M1.HC_M1 = res.CF_M1.HC_M1,
+#                  res.CF_M2.HC_M2 = res.CF_M2.HC_M2,
+#                  res.CF_M17.HC_M17 = res.CF_M17.HC_M17
+#                 )
 
-#HC
-res.HC_HC_TRANS.HC_RosSep <- results(ddsColl, contrast = c('condition', 'HC_HC_TRANS', 'HC_RosSep'))
-res.HC_CF_TRANS.HC_RosSep <- results(ddsColl, contrast = c('condition', 'HC_CF_TRANS', 'HC_RosSep'))
 
-#CF
-res.CF_HC_TRANS.CF_RosSep <- results(ddsColl, contrast = c('condition',  'CF_HC_TRANS', 'CF_RosSep'))
-res.CF_CF_TRANS.CF_RosSep <- results(ddsColl, contrast = c('condition',  'CF_CF_TRANS', 'CF_RosSep'))
-
-# macrophages
-res.CF_M0.HC_M0 <- results(ddsColl, contrast = c('condition', 'CF_M0', 'HC_M0'))
-res.CF_M1.HC_M1 <- results(ddsColl, contrast = c('condition', 'CF_M1', 'HC_M1'))
-res.CF_M2.HC_M2 <- results(ddsColl, contrast = c('condition', 'CF_M2', 'HC_M2'))
-res.CF_M17.HC_M17 <- results(ddsColl, contrast = c('condition', 'CF_M17', 'HC_M17'))
-
-result_list <- c(res.HC_HC_TRANS.HC_RosSep = res.HC_HC_TRANS.HC_RosSep,
-                 res.HC_CF_TRANS.HC_RosSe = res.HC_CF_TRANS.HC_RosSep,
-                 
-                 res.CF_HC_TRANS.CF_RosSep = res.CF_HC_TRANS.CF_RosSep,
-                 res.CF_CF_TRANS.CF_RosSep = res.CF_CF_TRANS.CF_RosSep,
-                 
-                 res.CF_M0.HC_M0 = res.CF_M0.HC_M0,
-                 res.CF_M1.HC_M1 = res.CF_M1.HC_M1,
-                 res.CF_M2.HC_M2 = res.CF_M2.HC_M2,
-                 res.CF_M17.HC_M17 = res.CF_M17.HC_M17
-                 )
-
-
+res_HC_CF_TRANSvsHC_RosSep <- results(ddsColl, contrast = c('condition', 'HC_CF_TRANS', 'HC_RosSep'))
+res_HC_HC_TRANSvsHC_RosSep <- results(ddsColl, contrast = c('condition', 'HC_HC_TRANS', 'HC_RosSep'))
+write.xlsx(res_HC_CF_TRANSvsHC_RosSep, file = 'output/bijean_result.xlsx', sheetName = 'HC_CF_TRANSvsHC_RosSep')
+write.xlsx(res_HC_HC_TRANSvsHC_RosSep, file = 'output/bijean_result.xlsx', sheetName = 'res_HC_HC_TRANSvsHC_RosSe',
+           append = T)
 #----------------------------------------------------------------------------------------
-sheetname <- names(result_list)
-for(i in 1:length(result_list)){
-  write.xlsx(x = result_list[[i]], file = 'output/bijean_result.xlsx', 
-             sheetName = sheetname[i],
-             append = T)
-}
+# sheetname <- names(result_list)
+# for(i in 1:length(result_list)){
+#   write.xlsx(x = result_list[[i]], file = 'output/bijean_result.xlsx', 
+#              sheetName = sheetname[i],
+#              append = T)
+# }
 
 

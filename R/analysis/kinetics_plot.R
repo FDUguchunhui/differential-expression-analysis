@@ -527,3 +527,17 @@ write.table(five_time_points.ts, file = 'enrichment intersection 5 time points g
 #plot
 
 autoHeatmap::hmplot(count_matrix = Trblock_counts_normed, enrichment_xlsx = 'data/overlap.xlsx')
+
+
+# volcano plot
+EnhancedVolcano(res_HC_CF_TRANSvsHC_RosSep,
+                lab = rownames(res_HC_CF_TRANSvsHC_RosSep),
+                x = 'log2FoldChange',
+                y = 'padj',
+                xlim = c(-5, 8))
+
+EnhancedVolcano(res_HC_HC_TRANSvsHC_RosSep,
+                lab = rownames(res_HC_HC_TRANSvsHC_RosSep),
+                x = 'log2FoldChange',
+                y = 'pvalue',
+                xlim = c(-5, 8))
