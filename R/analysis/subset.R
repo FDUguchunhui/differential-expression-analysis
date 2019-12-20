@@ -93,8 +93,21 @@ write.xlsx2(x = normalized_counts_sub,
 
 # get up/down regulated genes
 
-diego <- autoHeatmap::res_subgroup(res_8hrp_2hrCF, alpha = 0.1, reg_dir = 'up')
-diego2 <- autoHeatmap::res_subgroup(res_8hrp_2hrCF, alpha = 0.1, reg_dir = 'down')
+res_HC_CF_TRANSvsHC_RosSep_up <- res_subgroup(res_HC_CF_TRANSvsHC_RosSep, alpha = 0.1, reg_dir = 'up')
+res_HC_CF_TRANSvsHC_RosSep_down <- res_subgroup(res_HC_CF_TRANSvsHC_RosSep, alpha = 0.1, reg_dir = 'down')
+
+res_HC_HC_TRANSvsHC_RosSep_up <- res_subgroup(res_HC_HC_TRANSvsHC_RosSep, alpha = 0.1, reg_dir = 'up')
+res_HC_HC_TRANSvsHC_RosSep_down <- res_subgroup(res_HC_HC_TRANSvsHC_RosSep, alpha = 0.1, reg_dir = 'down')
+
+
+output_list <- list(res_HC_CF_TRANSvsHC_RosSep_up = res_HC_CF_TRANSvsHC_RosSep_up, 
+     res_HC_CF_TRANSvsHC_RosSep_down = res_HC_CF_TRANSvsHC_RosSep_down,
+     res_HC_HC_TRANSvsHC_RosSep_up = res_HC_HC_TRANSvsHC_RosSep_up,
+     res_HC_HC_TRANSvsHC_RosSep_down = res_HC_HC_TRANSvsHC_RosSep_down)
+sheetName <- names(output_list)
+for(i in 1:length(output_list)){
+  write.xlsx(x = output_list[[i]], file = 'output/result_bijean_filtered.xlsx', sheetName = sheetName[i], append = T)
+}
 
 
 
